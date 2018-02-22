@@ -95,7 +95,7 @@ function createChallenge($challenger, $adminApproved, $name,
 						 $location3, $closingTime) {
 	$newItem = new stdClass();
 	$newItem->id            = date("zyHis");
-	if ($challenger) $newItem->challenger    = $challenger;
+	$newItem->challenger    = $challenger;
 	$newItem->adminApproved = $adminApproved;
 	$newItem->name          = $name;
 	$newItem->image         = $image;
