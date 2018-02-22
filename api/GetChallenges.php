@@ -64,8 +64,12 @@ if (empty($_GET['edit']) && (
 }
 
 //To return only specific items at given IDs
-if (!empty($_GET['find'])) {
+else if (!empty($_GET['find'])) {
 	$return = findChallenges($_GET['find']);
+}
+
+else if (!empty($_GET['search'])) {
+	$return = seachChallenges($_GET['search']);
 }
 
 //Return a value if needed
@@ -170,5 +174,70 @@ function findChallenges($ids) {
 	
 	return json_encode($wantedItems);
 }
+
+function seachChallenges($searchPhrase) {
+	$_challenges = json_decode($GLOBALS['challenges']);
+	$searchWords = explode(' ', $searchPhrase);
+	
+	$nameMatches = [];
+	$skillMatches = [];
+	$decriptionMatches = [];
+	$locationMatches = [];
+	
+	foreach ($_challenges as $i => $challenge) {
+		if(0 < count(array_intersect(array_map('strtolower', explode(' ', $challenge->name)), $searchWords)))
+		{
+			array_push($nameMatches, $challenge);
+		}
+	}
+	return json_encode(powerSet($searchPhrase));
+	//return json_encode($nameMatches);
+}
+
+function powerSet($array) {
+    // add the empty set
+    $results = array(array());
+
+    foreach (str_split(str_replace(" ", "", $array)) as $element) {
+        foreach ($results as $combination) {
+            $results[] = array_merge(array($element), $combination);
+        }
+    }
+
+    return $results;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ?>
