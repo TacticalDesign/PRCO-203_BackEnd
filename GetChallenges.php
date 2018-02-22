@@ -120,6 +120,7 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 						 $location3, $closingTime) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
+	$returnable = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
 			if ($challenger != null)
