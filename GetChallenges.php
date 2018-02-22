@@ -75,16 +75,18 @@ if (!empty($return))
 function deleteChallenge($id) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
+	$success = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
 			unset($_challenges[$i]);
 			$_challenges = array_values($_challenges);
+			$success = $thing;
 		}
 	}
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
-	return $GLOBALS['challenges'];
+	return json_encode($success);
 }
 
 function createChallenge($challenger, $adminApproved, $name,
