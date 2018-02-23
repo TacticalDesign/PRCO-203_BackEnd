@@ -69,7 +69,7 @@ else if (!empty($_GET['find'])) {
 }
 
 else if (!empty($_GET['search'])) {
-	$return = seachChallenges($_GET['search']);
+	$return = searchChallenges($_GET['search']);
 }
 
 //Return a value if needed
@@ -175,39 +175,39 @@ function findChallenges($ids) {
 	return json_encode($wantedItems);
 }
 
-function seachChallenges($searchPhrase) {
+function searchChallenges($searchPhrase) {
+	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
-	$searchWords = explode(' ', $searchPhrase);
 	
-	$nameMatches = [];
-	$skillMatches = [];
-	$decriptionMatches = [];
-	$locationMatches = [];
-	
-	foreach ($_challenges as $i => $challenge) {
-		if(0 < count(array_intersect(array_map('strtolower', explode(' ', $challenge->name)), $searchWords)))
-		{
-			array_push($nameMatches, $challenge);
+	$searchTerms = [];
+	for ($i = strlen($searchPhrase); $i > 1; $i--) {
+		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
+			array_push($searchTerms, substr($searchPhrase, $ii, $i));
 		}
 	}
-	return json_encode(powerSet($searchPhrase));
-	//return json_encode($nameMatches);
+	
+	$matches = [];
+	$matchedIDs = [];
+	foreach ($searchTerms as $i => $term) {
+		if (!empty($term)) {
+			foreach ($_challenges as $ii => $challenge) {				
+				if ((strpos(strtolower($challenge->name), $term) !== false
+							  || strpos(strtolower($challenge->name), $term) !== false
+							  || strpos(strtolower(implode("|?|", $challenge->skills)), $term) !== false
+							  || strpos(strtolower($challenge->description), $term) !== false
+							  || strpos(strtolower($challenge->location1), $term) !== false
+							  || strpos(strtolower($challenge->location2), $term) !== false
+							  || strpos(strtolower($challenge->location3), $term) !== false)
+							  && !in_array($challenge->id, $matchedIDs)) {
+					array_push($matches, $challenge);
+					array_push($matchedIDs, $challenge->id);
+				}
+			}
+		}
+	}
+	
+	return json_encode($matches);
 }
-
-function powerSet($array) {
-    // add the empty set
-    $results = array(array());
-
-    foreach (str_split(str_replace(" ", "", $array)) as $element) {
-        foreach ($results as $combination) {
-            $results[] = array_merge(array($element), $combination);
-        }
-    }
-
-    return $results;
-}
-
-
 
 
 
