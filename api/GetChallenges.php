@@ -69,7 +69,9 @@ else if (!empty($_GET['find'])) {
 }
 
 else if (!empty($_GET['search'])) {
-	$return = searchChallenges($_GET['search']);
+	$return = searchChallenges(
+			$_GET['search'],
+			!empty($_GET['approved']) ? $_GET['approved'] : null);
 }
 
 //Return a value if needed
@@ -103,7 +105,7 @@ function createChallenge($challenger, $adminApproved, $name,
 	$newItem->adminApproved = $adminApproved;
 	$newItem->name          = $name;
 	$newItem->image         = $image;
-	$newItem->skills        = $skills;
+	$newItem->skills        = empty($skills) ? array() : $skills;
 	$newItem->description   = $description;
 	$newItem->reward        = $reward;
 	$newItem->location1     = $location1;
@@ -175,7 +177,7 @@ function findChallenges($ids) {
 	return json_encode($wantedItems);
 }
 
-function searchChallenges($searchPhrase) {
+function searchChallenges($searchPhrase, $adminApproved) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -190,10 +192,14 @@ function searchChallenges($searchPhrase) {
 	$matchedIDs = [];
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
-			foreach ($_challenges as $ii => $challenge) {				
+			foreach ($_challenges as $ii => $challenge) {
+				if (!empty($adminApproved)) {
+					if ($challenge->adminApproved != json_decode($adminApproved))
+						continue;
+				}
 				if ((strpos(strtolower($challenge->name), $term) !== false
 							  || strpos(strtolower($challenge->name), $term) !== false
-							  || strpos(strtolower(implode("|?|", $challenge->skills)), $term) !== false
+							  || strpos(strtolower(implode("|", $challenge->skills)), $term) !== false
 							  || strpos(strtolower($challenge->description), $term) !== false
 							  || strpos(strtolower($challenge->location1), $term) !== false
 							  || strpos(strtolower($challenge->location2), $term) !== false
