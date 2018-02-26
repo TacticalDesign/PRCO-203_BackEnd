@@ -1,5 +1,7 @@
 <?php
 
+touch("CurrentChallenges.json");
+
 $return = null;
 
 $challenges = file_get_contents("CurrentChallenges.json");
@@ -71,7 +73,7 @@ else if (!empty($_GET['find'])) {
 else if (!empty($_GET['search'])) {
 	$return = searchChallenges(
 			$_GET['search'],
-			!empty($_GET['approved']) ? $_GET['approved'] : null);
+			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
 //Return a value if needed
@@ -177,7 +179,7 @@ function findChallenges($ids) {
 	return json_encode($wantedItems);
 }
 
-function searchChallenges($searchPhrase, $adminApproved) {
+function searchChallenges($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -188,15 +190,37 @@ function searchChallenges($searchPhrase, $adminApproved) {
 		}
 	}
 	
+	$params = [];
+	if (!empty($where)) {
+		$params = explode(';', $where);
+		for	($iii = 0; $iii < count($params); $iii++) {
+			$params[$iii] = explode(':', $params[$iii], 2);
+		}
+	}
+	
 	$matches = [];
 	$matchedIDs = [];
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
 			foreach ($_challenges as $ii => $challenge) {
-				if (!empty($adminApproved)) {
-					if ($challenge->adminApproved != json_decode($adminApproved))
-						continue;
+				$skip = false;
+				foreach	($params as $param) {
+					if (is_bool($challenge->{$param[0]})) {
+						if (json_decode($challenge->{$param[0]}) != json_decode($param[1])) {
+							$skip = true;
+							break;
+						}
+					} else {
+						if ($challenge->{$param[0]} != $param[1]) {
+							$skip = true;
+							break;
+						}
+					}
 				}
+				
+				if ($skip)
+					continue;
+				
 				if ((strpos(strtolower($challenge->name), $term) !== false
 							  || strpos(strtolower($challenge->name), $term) !== false
 							  || strpos(strtolower(implode("|", $challenge->skills)), $term) !== false
@@ -214,12 +238,6 @@ function searchChallenges($searchPhrase, $adminApproved) {
 	
 	return json_encode($matches);
 }
-
-
-
-
-
-
 
 
 
