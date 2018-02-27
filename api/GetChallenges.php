@@ -2,7 +2,7 @@
 
 touch("CurrentChallenges.json");
 
-$return = null;
+$return = "false";
 
 $challenges = file_get_contents("CurrentChallenges.json");
 
@@ -17,6 +17,7 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
 		|| !empty($_GET['image'])
+		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
@@ -24,12 +25,13 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['location3'])
 		|| !empty($_GET['closingTime'])
 		|| !empty($_GET['minAttendees'])
-		|| !empty($_GET['maxAttendees'])) {
+		|| !empty($_GET['maxAttendees']))) {
 	$return = createChallenge(
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
 			!empty($_GET['image'])         ? $_GET['image'] : null,
+			!empty($_GET['skills'])        ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
@@ -51,20 +53,24 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['location1'])
 		|| !empty($_GET['location2'])
 		|| !empty($_GET['location3'])
-		|| !empty($_GET['closingTime']))) {
+		|| !empty($_GET['closingTime'])
+		|| !empty($_GET['minAttendees'])
+		|| !empty($_GET['maxAttendees']))) {
 	$return = editChallenge(
 			!empty($_GET['edit'])          ? $_GET['edit'] : null,
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
 			!empty($_GET['image'])         ? $_GET['image'] : null,
-			!empty($_GET['skills']) 	   ? $_GET['skills'] : null,
+			!empty($_GET['skills'])        ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
 			!empty($_GET['location2'])     ? $_GET['location2'] : null,
 			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null);
+			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
+			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
+			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null);
 }
 
 //To return only specific items at given IDs
@@ -125,7 +131,7 @@ function createChallenge($challenger, $adminApproved, $name,
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $description, $reward, $location1,
+						 $image, $skills, $description, $reward, $location1,
 						 $location2, $location3, $closingTime,
 						 $minAttendees, $maxAttendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
@@ -139,6 +145,8 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->adminApproved = $adminApproved;
 			if ($image != null)
 				$thing->image = $image;
+			if ($skills != null)
+				$thing->skills = $skills;
 			if ($description != null)
 				$thing->description = $description;
 			if ($reward != null)
@@ -242,8 +250,6 @@ function searchChallenges($searchPhrase, $where) {
 	
 	return json_encode($matches);
 }
-
-
 
 
 
