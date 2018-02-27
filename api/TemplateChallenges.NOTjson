@@ -11,7 +11,10 @@
 		"location1": "abc",
 		"location2": "def",
 		"location3": "ghi",
-		"closingTime": "2018-02-28T18:25:43.000Z"
+		"closingTime": "2018-02-28T18:25:43.000Z",
+		"minAttendees":"10",
+		"maxAttendees":"5",
+		"attendees": ["654346", "476835"]
 	},
 	{
 		"id": "2345456789",
@@ -25,7 +28,10 @@
 		"location1": "123",
 		"location2": "456",
 		"location3": "789",
-		"closingTime": "2018-02-28T18:25:43.000Z"
+		"closingTime": "2018-02-28T18:25:43.000Z",
+		"minAttendees":"10",
+		"maxAttendees":"5",
+		"attendees": ["654346", "476835"]
 	},
 	{
 		"id": "98766789",
@@ -39,6 +45,9 @@
 		"location1": "rst",
 		"location2": "uvw",
 		"location3": "xyz",
-		"closingTime": "2018-02-28T18:26:43.000Z"
+		"closingTime": "2018-02-28T18:26:43.000Z",
+		"minAttendees":"10",
+		"maxAttendees":"5",
+		"attendees": ["654346", "476835"]
 	}
 ]
