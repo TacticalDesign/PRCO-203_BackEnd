@@ -17,25 +17,27 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
 		|| !empty($_GET['image'])
-		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
 		|| !empty($_GET['location2'])
 		|| !empty($_GET['location3'])
-		|| !empty($_GET['closingTime']))) {
+		|| !empty($_GET['closingTime'])
+		|| !empty($_GET['minAttendees'])
+		|| !empty($_GET['maxAttendees'])) {
 	$return = createChallenge(
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
 			!empty($_GET['image'])         ? $_GET['image'] : null,
-			!empty($_GET['skills']) 	   ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
 			!empty($_GET['location2'])     ? $_GET['location2'] : null,
 			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null);
+			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
+			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
+			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null);
 
 //To edit an existing challenge at a given ID
 } elseif (!empty($_GET['edit']) && (
@@ -123,9 +125,9 @@ function createChallenge($challenger, $adminApproved, $name,
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $skills, $description,
-						 $reward, $location1, $location2,
-						 $location3, $closingTime) {
+						 $image, $description, $reward, $location1,
+						 $location2, $location3, $closingTime,
+						 $minAttendees, $maxAttendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -137,8 +139,6 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->adminApproved = $adminApproved;
 			if ($image != null)
 				$thing->image = $image;
-			if ($skills != null)
-				$thing->skills = $skills;
 			if ($description != null)
 				$thing->description = $description;
 			if ($reward != null)
@@ -151,6 +151,10 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->location3 = $location3;
 			if ($closingTime != null)
 				$thing->closingTime = $closingTime;
+			if ($minAttendees != null)
+				$thing->minAttendees = $minAttendees;
+			if ($maxAttendees != null)
+				$thing->maxAttendees = $maxAttendees;
 			
 			$returnable = $thing;
 		}
