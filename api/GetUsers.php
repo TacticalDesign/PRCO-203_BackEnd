@@ -81,12 +81,6 @@ function deleteUser($id) {
 		}
 	}
 	
-	//if ($success == false)
-		//Do the above for challengers
-	
-	//if ($success == false)
-		//Do the above for admins	
-	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents("YoungPeople.json", $GLOBALS['youngPeople']);
 	return json_encode($success);
