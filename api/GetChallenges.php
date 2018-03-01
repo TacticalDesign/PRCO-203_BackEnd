@@ -106,9 +106,9 @@ function deleteChallenge($id) {
 }
 
 function createChallenge($challenger, $adminApproved, $name,
-						 $image, $skills, $description,
-						 $reward, $location1, $location2,
-						 $location3, $closingTime) {
+						 $image, $skills, $description, $reward,
+						 $location1, $location2, $location3,
+						 $closingTime, $minAttendees, $maxAttendees) {
 	$newItem = new stdClass();
 	$newItem->id            = date("zyHis");
 	$newItem->challenger    = $challenger;
@@ -122,6 +122,8 @@ function createChallenge($challenger, $adminApproved, $name,
 	$newItem->location2     = $location2;
 	$newItem->location3     = $location3;
 	$newItem->closingTime   = $closingTime;
+	$newItem->minAttendees  = $minAttendees;
+	$newItem->maxAttendees  = $maxAttendees;
 	
 	$_challenges = json_decode($GLOBALS['challenges']);
 	array_push($_challenges, $newItem);
@@ -131,9 +133,9 @@ function createChallenge($challenger, $adminApproved, $name,
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $skills, $description, $reward, $location1,
-						 $location2, $location3, $closingTime,
-						 $minAttendees, $maxAttendees) {
+						 $image, $skills, $description, $reward,
+						 $location1, $location2, $location3,
+						 $closingTime, $minAttendees, $maxAttendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
