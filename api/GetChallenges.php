@@ -75,7 +75,8 @@ if (empty($_GET['edit']) && (
 
 //To return only specific items at given IDs
 else if (!empty($_GET['find'])) {
-	$return = findChallenges($_GET['find']);
+	$return = findChallenges($_GET['find'],
+			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
 else if (!empty($_GET['search'])) {
@@ -175,19 +176,46 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 	return json_encode($returnable);
 }
 
-function findChallenges($ids) {
-	if ($ids == "all"){
+function findChallenges($ids, $where) {
+	
+	$params = [];
+	if ($where != null) {
+		if (!empty($where)) {
+			$params = explode(';', $where);
+			for	($iii = 0; $iii < count($params); $iii++) {
+				$params[$iii] = explode(':', $params[$iii], 2);
+			}
+		}
+	} else if ($ids == "all") {
 		return $GLOBALS['challenges'];
 	}
+	
 	
 	$wantedIDs = explode(',', $ids);
 	$wantedItems = [];
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
-	foreach($_challenges as $i => $thing) {
-		if (in_array($thing->id, $wantedIDs)) {
-			array_push($wantedItems, $thing);
+	foreach($_challenges as $i => $challenge) {
+		$skip = false;
+		foreach	($params as $param) {
+			if (is_bool($challenge->{$param[0]})) {
+				if (json_decode($challenge->{$param[0]}) != json_decode($param[1])) {
+					$skip = true;
+					break;
+				}
+			} else {
+				if ($challenge->{$param[0]} != $param[1]) {
+					$skip = true;
+					break;
+				}
+			}
 		}
+		
+		if ($skip)
+			continue;
+		
+		if ($ids == "all" || in_array($challenge->id, $wantedIDs))
+			array_push($wantedItems, $challenge);
 	}
 	
 	return json_encode($wantedItems);
