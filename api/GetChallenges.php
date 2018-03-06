@@ -11,7 +11,7 @@ if (!empty($_GET['delete'])) {
 	$return = deleteChallenge($_GET['delete']);
 }
 
-//To create a new challenge when no ID is given
+//To create a new challenge when no ID is given 
 if (empty($_GET['edit']) && (
 		   !empty($_GET['challenger'])
 		|| !empty($_GET['adminApproved'])
