@@ -1,10 +1,8 @@
 <?php
 
-touch("YoungPeople.json");
-
 $return = "false";
 
-$youngPeople = file_get_contents("YoungPeople.json");
+$youngPeople = file_get_contents(youngPeopleFile);
 
 //To delete a user at a given ID
 if (!empty($_GET['delete'])) {
@@ -82,7 +80,7 @@ function deleteUser($id) {
 	}
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents("YoungPeople.json", $GLOBALS['youngPeople']);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	return json_encode($success);
 }
 
@@ -103,7 +101,7 @@ function createUser($email, $password, $firstName,
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	array_push($_youngPeople, $newItem);
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents("YoungPeople.json", $GLOBALS['youngPeople']);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	return $GLOBALS['youngPeople'];
 }
 
@@ -137,7 +135,7 @@ function editUser($id, $email, $password,
 	}
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents("YoungPeople.json", $GLOBALS['youngPeople']);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	return json_encode($returnable);
 }
 

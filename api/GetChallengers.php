@@ -1,10 +1,8 @@
 <?php
 
-touch("Challengers.json");
-
 $return = "false";
 
-$challengers = file_get_contents("Challengers.json");
+$challengers = file_get_contents(challengerFile);
 
 //To delete a user at a given ID
 if (!empty($_GET['delete'])) {
@@ -94,7 +92,7 @@ function deleteUser($id) {
 	}
 	
 	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents("Challengers.json", $GLOBALS['challengers']);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
 	return json_encode($success);
 }
 
@@ -119,7 +117,7 @@ function createUser($email, $password, $name,
 	$_challengers = json_decode($GLOBALS['challengers']);
 	array_push($_challengers, $newItem);
 	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents("Challengers.json", $GLOBALS['challengers']);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
 	return $GLOBALS['challengers'];
 }
 
@@ -160,7 +158,7 @@ function editUser($id, $email, $password, $name,
 	}
 	
 	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents("Challengers.json", $GLOBALS['challengers']);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
 	return json_encode($returnable);
 }
 

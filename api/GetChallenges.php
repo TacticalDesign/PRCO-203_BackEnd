@@ -1,10 +1,8 @@
 <?php
 
-touch("CurrentChallenges.json");
-
 $return = "false";
 
-$challenges = file_get_contents("CurrentChallenges.json");
+$challenges = file_get_contents(currentChallengesFile);
 
 //To delete a challenge at a given ID
 if (!empty($_GET['delete'])) {
@@ -102,7 +100,7 @@ function deleteChallenge($id) {
 	}
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
 	return json_encode($success);
 }
 
@@ -129,7 +127,7 @@ function createChallenge($challenger, $adminApproved, $name,
 	$_challenges = json_decode($GLOBALS['challenges']);
 	array_push($_challenges, $newItem);
 	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
 	return $GLOBALS['challenges'];
 }
 
@@ -172,7 +170,7 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 	}
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
 	return json_encode($returnable);
 }
 

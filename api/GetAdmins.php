@@ -1,10 +1,10 @@
 <?php
 
-touch("Admins.json");
+include("Locations.php");
 
 $return = "false";
 
-$admins = file_get_contents("Admins.json");
+$admins = file_get_contents(adminFile);
 
 //To delete a user at a given ID
 if (!empty($_GET['delete'])) {
@@ -70,7 +70,7 @@ function deleteUser($id) {
 	}
 	
 	$GLOBALS['admins'] = json_encode($_admins);
-	file_put_contents("admins.json", $GLOBALS['admins']);
+	file_put_contents(adminFile, $GLOBALS['admins']);
 	return json_encode($success);
 }
 
@@ -87,7 +87,7 @@ function createUser($email, $password, $firstName,
 	$_admins = json_decode($GLOBALS['admins']);
 	array_push($_admins, $newItem);
 	$GLOBALS['admins'] = json_encode($_admins);
-	file_put_contents("Admins.json", $GLOBALS['admins']);
+	file_put_contents(adminFile, $GLOBALS['admins']);
 	return $GLOBALS['admins'];
 }
 
@@ -114,7 +114,7 @@ function editUser($id, $email, $password,
 	}
 	
 	$GLOBALS['admins'] = json_encode($_admins);
-	file_put_contents("Admins.json", $GLOBALS['admins']);
+	file_put_contents(adminFile, $GLOBALS['admins']);
 	return json_encode($returnable);
 }
 
