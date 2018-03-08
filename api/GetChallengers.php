@@ -16,8 +16,6 @@ if (empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['name'])
-		|| !empty($_GET['image'])
-		|| !empty($_GET['cover'])
 		|| !empty($_GET['colour'])
 		|| !empty($_GET['contactEmail'])
 		|| !empty($_GET['contactPhone'])
@@ -28,8 +26,6 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['email'])              ? $_GET['email'] : null,
 			!empty($_GET['password'])           ? $_GET['password'] : null,
 			!empty($_GET['name'])               ? $_GET['name'] : null,
-			!empty($_GET['image'])              ? $_GET['image'] : null,
-			!empty($_GET['cover'])              ? $_GET['cover'] : null,
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
@@ -42,8 +38,6 @@ if (empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['name'])
-		|| !empty($_GET['image'])
-		|| !empty($_GET['cover'])
 		|| !empty($_GET['colour'])
 		|| !empty($_GET['contactEmail'])
 		|| !empty($_GET['contactPhone'])
@@ -51,11 +45,10 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['currentChallenges'])
 		|| !empty($_GET['archivedChallenges']))) {
 	$return = editUser(
+			$_GET['edit'],
 			!empty($_GET['email'])              ? $_GET['email'] : null,
 			!empty($_GET['password'])           ? $_GET['password'] : null,
 			!empty($_GET['name'])               ? $_GET['name'] : null,
-			!empty($_GET['image'])              ? $_GET['image'] : null,
-			!empty($_GET['cover'])              ? $_GET['cover'] : null,
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
@@ -98,8 +91,7 @@ function deleteUser($id) {
 	return json_encode($success);
 }
 
-function createUser($email, $password, $name,
-					$image, $cover, $colour,
+function createUser($email, $password, $name, $colour,
 					$contactEmail, $contactPhone, $about,
 					$currentChallenges, $archivedChallenges) {
 	$newItem = new stdClass();
@@ -107,8 +99,8 @@ function createUser($email, $password, $name,
 	$newItem->email              = $email;
 	$newItem->password           = $password;
 	$newItem->name               = $name;
-	$newItem->image              = $image;
-	$newItem->cover              = $cover;
+	$newItem->image              = profileFolder . "/" . $newItem->id . ".png";
+	$newItem->cover              = coverPhotoFolder . "/" . $newItem->id . ".png";
 	$newItem->colour             = $colour;
 	$newItem->contactEmail       = $contactEmail;
 	$newItem->contactPhone       = $contactPhone;
@@ -124,9 +116,8 @@ function createUser($email, $password, $name,
 }
 
 function editUser($id, $email, $password, $name,
-					$image, $cover, $colour,
-					$contactEmail, $contactPhone, $about,
-					$currentChallenges, $archivedChallenges) {
+					$colour, $contactEmail, $contactPhone,
+					$about, $currentChallenges, $archivedChallenges) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -138,10 +129,6 @@ function editUser($id, $email, $password, $name,
 				$person->password = $password;
 			if ($name != null)
 				$person->name = $name;
-			if ($image != null)
-				$person->image = $image;
-			if ($cover != null)
-				$person->cover = $cover;
 			if ($colour != null)
 				$person->colour = $colour;
 			if ($contactEmail != null)

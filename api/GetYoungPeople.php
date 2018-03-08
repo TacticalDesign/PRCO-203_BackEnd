@@ -17,7 +17,6 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
 		|| !empty($_GET['surname'])
-		|| !empty($_GET['image'])
 		|| !empty($_GET['skills'])
 		|| !empty($_GET['interests'])
 		|| !empty($_GET['feedback']))) {
@@ -26,7 +25,6 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['image'])   ? $_GET['image'] : null,
 			!empty($_GET['skills'])    ? $_GET['skills'] : null,
 			!empty($_GET['interests']) ? $_GET['interests'] : null,
 			!empty($_GET['feedback'])  ? $_GET['feedback'] : null);
@@ -37,7 +35,6 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
 		|| !empty($_GET['surname'])
-		|| !empty($_GET['image'])
 		|| !empty($_GET['skills'])
 		|| !empty($_GET['interests'])
 		|| !empty($_GET['feedback']))) {
@@ -47,7 +44,6 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['image'])    ? $_GET['image'] : null,
 			!empty($_GET['skills'])    ? $_GET['skills'] : null,
 			!empty($_GET['interests']) ? $_GET['interests'] : null,
 			!empty($_GET['feedback'])  ? $_GET['feedback'] : null);
@@ -87,7 +83,7 @@ function deleteUser($id) {
 }
 
 function createUser($email, $password, $firstName,
-						 $surname, $image, $skills,
+						 $surname, $skills,
 						 $interests, $feedbacks) {
 	$newItem = new stdClass();
 	$newItem->id        = date("zyHis");
@@ -95,7 +91,7 @@ function createUser($email, $password, $firstName,
 	$newItem->password  = $password;
 	$newItem->firstName = $firstName;
 	$newItem->surname   = $surname;
-	$newItem->image     = $image;
+	$newItem->image     = profileFolder . "/" . $newItem->id . ".png";
 	$newItem->skills    = $skills;
 	$newItem->interests = $interests;
 	$newItem->feedbacks = $feedbacks;
@@ -108,7 +104,7 @@ function createUser($email, $password, $firstName,
 }
 
 function editUser($id, $email, $password,
-						$firstName, $surname, $image,
+						$firstName, $surname,
 						$skills, $interests, $feedbacks) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
@@ -123,8 +119,6 @@ function editUser($id, $email, $password,
 				$person->firstName = $firstName;
 			if ($surname != null)
 				$person->surname = $surname;
-			if ($image != null)
-				$person->image = $image;
 			if ($skills != null)
 				$person->skills = $skills;
 			if ($interests != null)
@@ -154,7 +148,6 @@ function findUsers($ids, $where) {
 	} else if ($ids == "all") {
 		return $GLOBALS['youngPeople'];
 	}
-	
 	
 	$wantedIDs = explode(',', $ids);
 	$wantedUsers = [];

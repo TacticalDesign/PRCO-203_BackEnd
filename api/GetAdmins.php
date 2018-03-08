@@ -16,29 +16,25 @@ if (empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname'])
-		|| !empty($_GET['image']))) {
+		|| !empty($_GET['surname']))) {
 	$return = createUser(
 			!empty($_GET['email'])     ? $_GET['email'] : null,
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['image'])   ? $_GET['image'] : null);
+			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 
 //To edit an existing challenge at a given ID
 } elseif (!empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname'])
-		|| !empty($_GET['image']))) {
+		|| !empty($_GET['surname']))) {
 	$return = editUser(
 			!empty($_GET['edit'])      ? $_GET['edit'] : null,
 			!empty($_GET['email'])     ? $_GET['email'] : null,
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['image'])    ? $_GET['image'] : null);
+			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 }
 
 //To return only specific users at given IDs
@@ -75,14 +71,14 @@ function deleteUser($id) {
 }
 
 function createUser($email, $password, $firstName,
-						 $surname, $image) {
+						 $surname) {
 	$newItem = new stdClass();
 	$newItem->id        = date("zyHis");
 	$newItem->email     = $email;
 	$newItem->password  = $password;
 	$newItem->firstName = $firstName;
 	$newItem->surname   = $surname;
-	$newItem->image     = $image;
+	$newItem->image     = profileFolder . "/" . $newItem->id . ".png";
 	
 	$_admins = json_decode($GLOBALS['admins']);
 	array_push($_admins, $newItem);
@@ -92,7 +88,7 @@ function createUser($email, $password, $firstName,
 }
 
 function editUser($id, $email, $password,
-						$firstName, $surname, $image) {
+						$firstName, $surname) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
@@ -106,8 +102,6 @@ function editUser($id, $email, $password,
 				$person->firstName = $firstName;
 			if ($surname != null)
 				$person->surname = $surname;
-			if ($image != null)
-				$person->image = $image;
 			
 			$returnable = $person;
 		}
