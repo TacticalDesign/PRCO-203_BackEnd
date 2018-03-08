@@ -8,6 +8,8 @@
 		"image": "img\/56865432.png",
 		"skills": ["Skill #1", "Skill #2", "Skill #3"],
 		"interests": ["Interest #1", "Interest #2", "Interest #3"],
+		"currentChallenges" : ["23456", "876543"],
+		"archivedChallenges" : [],
 		"feedbacks": [
 			{
 				"rating": "5",
@@ -32,6 +34,8 @@
 		"image": "img\/56865432.png",
 		"skills": ["Skill #6", "Skill #1", "Skill #8"],
 		"interests": ["Interest #9", "Interest #3", "Interest #5"],
+		"currentChallenges" : ["23456", "876543"],
+		"archivedChallenges" : [],
 		"feedbacks": [
 			{
 				"rating": "2",
