@@ -1,6 +1,6 @@
 # PRCO-203_BackEnd
 
-## Wiki Contents
+## Wiki Table Of Contents
 * [Challenges](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challenges)
   * [About](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challenges#about)
   * [Properties](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challenges#properties)
@@ -19,3 +19,12 @@
     * [New](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Young-People#new)
     * [Delete](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Young-People#delete)
     * [Search](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Young-People#search)
+* [Challengers](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers)
+  * [About](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#about)
+  * [Properties](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#properties)
+  * [API Calls](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#api-calls)
+    * [Find](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#find)
+    * [Edit](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#edit)
+    * [New](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#new)
+    * [Delete](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#delete)
+    * [Search](https://github.com/TacticalDesign/PRCO-203_BackEnd/wiki/Challengers#search)
