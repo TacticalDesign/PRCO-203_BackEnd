@@ -1,5 +1,7 @@
 <?php
 
+include("Locations.php");
+
 $return = "false";
 
 $challenges = file_get_contents(currentChallengesFile);

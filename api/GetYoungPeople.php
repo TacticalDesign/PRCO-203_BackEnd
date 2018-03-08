@@ -1,5 +1,7 @@
 <?php
 
+include("Locations.php");
+
 $return = "false";
 
 $youngPeople = file_get_contents(youngPeopleFile);
