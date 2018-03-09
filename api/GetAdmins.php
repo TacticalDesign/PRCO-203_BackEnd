@@ -19,7 +19,7 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['surname']))) {
 	$return = createUser(
 			!empty($_GET['email'])     ? $_GET['email'] : null,
-			!empty($_GET['password'])  ? $_GET['password'] : null,
+			!empty($_GET['password'])  ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 
@@ -32,7 +32,7 @@ if (empty($_GET['edit']) && (
 	$return = editUser(
 			!empty($_GET['edit'])      ? $_GET['edit'] : null,
 			!empty($_GET['email'])     ? $_GET['email'] : null,
-			!empty($_GET['password'])  ? $_GET['password'] : null,
+			!empty($_GET['password'])  ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 }
