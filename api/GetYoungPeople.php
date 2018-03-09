@@ -12,7 +12,9 @@ if (!empty($_GET['delete'])) {
 }
 
 //To create a new user when no ID is given
-if (empty($_GET['edit']) && (
+if (empty($_GET['edit']) &&
+	empty($_GET['push']) && 
+	empty($_GET['pop']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
@@ -24,18 +26,46 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 
-//To edit an existing challenge at a given ID
-} elseif (!empty($_GET['edit']) && (
-		   !empty($_GET['email'])
-		|| !empty($_GET['password'])
-		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname']))) {
+//To edit an existing young person at a given ID
+} else if (!empty($_GET['edit']) &&
+			empty($_GET['push']) && 
+			empty($_GET['pop']) && (
+			   !empty($_GET['email'])
+			|| !empty($_GET['password'])
+			|| !empty($_GET['firstName'])
+			|| !empty($_GET['surname']))) {
 	$return = editUser(
 			!empty($_GET['edit'])      ? $_GET['edit'] : null,
 			!empty($_GET['email'])     ? $_GET['email'] : null,
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
+			
+//To push values to a young person's array contents
+} else if ( empty($_GET['edit']) &&
+		   !empty($_GET['push']) && 
+		    empty($_GET['pop']) &&(
+			   !empty($_GET['skills'])
+			|| !empty($_GET['interests'])
+			|| !empty($_GET['feedbacks']))) {
+	$return = pushUser(
+			!empty($_GET['push'])      ? $_GET['push'] : null,
+			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
+			!empty($_GET['interests']) ? $_GET['interests'] : array(),
+			!empty($_GET['feedbacks']) ? $_GET['feedbacks'] : array());
+			
+//To pop values from a young person's array contents
+} else if ( empty($_GET['edit']) &&
+			empty($_GET['push']) &&
+		   !empty($_GET['pop']) && (
+			   !empty($_GET['skills'])
+			|| !empty($_GET['interests'])
+			|| !empty($_GET['feedbacks']))) {
+	$return = popUser(
+			!empty($_GET['pop'])       ? $_GET['pop'] : null,
+			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
+			!empty($_GET['interests']) ? $_GET['interests'] : array(),
+			!empty($_GET['feedbacks']) ? $_GET['feedbacks'] : array());
 }
 
 //To return only specific users at given IDs
@@ -92,8 +122,7 @@ function createUser($email, $password, $firstName,
 }
 
 function editUser($id, $email, $password,
-						$firstName, $surname,
-						$skills, $interests, $feedbacks) {
+						$firstName, $surname) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
 	$returnable = false;
@@ -107,6 +136,44 @@ function editUser($id, $email, $password,
 				$person->firstName = $firstName;
 			if ($surname != null)
 				$person->surname = $surname;
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	return json_encode($returnable);
+}
+
+function pushUser($id, $skills, $interests, $feedbacks) {
+	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	
+	$returnable = false;
+	foreach($_youngPeople as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills    = array_unique(array_merge($person->skills, $skills));
+			$person->interests = array_unique(array_merge($person->interests, $interests));
+			$person->feedbacks = array_unique(array_merge($person->feedbacks, $feedbacks));
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	return json_encode($returnable);
+}
+
+function popUser($id, $skills, $interests, $feedbacks) {
+	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	
+	$returnable = false;
+	foreach($_youngPeople as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills    = array_diff($person->skills, $skills);
+			$person->interests = array_diff($person->interests, $interests);
+			$person->feedbacks = array_diff($person->feedbacks, $feedbacks);
 			
 			$returnable = $person;
 		}
