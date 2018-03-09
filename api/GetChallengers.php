@@ -19,9 +19,7 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['colour'])
 		|| !empty($_GET['contactEmail'])
 		|| !empty($_GET['contactPhone'])
-		|| !empty($_GET['about'])
-		|| !empty($_GET['currentChallenges'])
-		|| !empty($_GET['archivedChallenges']))) {
+		|| !empty($_GET['about']))) {
 	$return = createUser(
 			!empty($_GET['email'])              ? $_GET['email'] : null,
 			!empty($_GET['password'])           ? $_GET['password'] : null,
@@ -29,9 +27,7 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null,
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
+			!empty($_GET['about'])              ? $_GET['about'] : null);
 
 //To edit an existing challenger at a given ID
 } elseif (!empty($_GET['edit']) && (
@@ -41,9 +37,7 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['colour'])
 		|| !empty($_GET['contactEmail'])
 		|| !empty($_GET['contactPhone'])
-		|| !empty($_GET['about'])
-		|| !empty($_GET['currentChallenges'])
-		|| !empty($_GET['archivedChallenges']))) {
+		|| !empty($_GET['about']))) {
 	$return = editUser(
 			$_GET['edit'],
 			!empty($_GET['email'])              ? $_GET['email'] : null,
@@ -52,9 +46,7 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null,
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
+			!empty($_GET['about'])              ? $_GET['about'] : null);
 }
 
 //To return only specific challengers at given IDs
@@ -92,8 +84,7 @@ function deleteUser($id) {
 }
 
 function createUser($email, $password, $name, $colour,
-					$contactEmail, $contactPhone, $about,
-					$currentChallenges, $archivedChallenges) {
+					$contactEmail, $contactPhone, $about) {
 	$newItem = new stdClass();
 	$newItem->id                 = date("zyHis");
 	$newItem->email              = $email;
@@ -105,8 +96,8 @@ function createUser($email, $password, $name, $colour,
 	$newItem->contactEmail       = $contactEmail;
 	$newItem->contactPhone       = $contactPhone;
 	$newItem->about              = $about;
-	$newItem->currentChallenges  = $currentChallenges;
-	$newItem->archivedChallenges = $archivedChallenges;
+	$newItem->currentChallenges  = array();
+	$newItem->archivedChallenges = array();
 	
 	$_challengers = json_decode($GLOBALS['challengers']);
 	array_push($_challengers, $newItem);
@@ -117,7 +108,7 @@ function createUser($email, $password, $name, $colour,
 
 function editUser($id, $email, $password, $name,
 					$colour, $contactEmail, $contactPhone,
-					$about, $currentChallenges, $archivedChallenges) {
+					$about) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -137,10 +128,6 @@ function editUser($id, $email, $password, $name,
 				$person->contactPhone = $contactPhone;
 			if ($about != null)
 				$person->about = $about;
-			if ($currentChallenges != null)
-				$person->currentChallenges = $currentChallenges;
-			if ($archivedChallenges != null)
-				$person->archivedChallenges = $archivedChallenges;
 			
 			$returnable = $person;
 		}

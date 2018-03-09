@@ -17,36 +17,25 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
 		|| !empty($_GET['surname'])
-		|| !empty($_GET['skills'])
-		|| !empty($_GET['interests'])
-		|| !empty($_GET['feedback']))) {
+		|| !empty($_GET['skills']))) {
 	$return = createUser(
 			!empty($_GET['email'])     ? $_GET['email'] : null,
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['skills'])    ? $_GET['skills'] : null,
-			!empty($_GET['interests']) ? $_GET['interests'] : null,
-			!empty($_GET['feedback'])  ? $_GET['feedback'] : null);
+			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 
 //To edit an existing challenge at a given ID
 } elseif (!empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname'])
-		|| !empty($_GET['skills'])
-		|| !empty($_GET['interests'])
-		|| !empty($_GET['feedback']))) {
+		|| !empty($_GET['surname']))) {
 	$return = editUser(
 			!empty($_GET['edit'])      ? $_GET['edit'] : null,
 			!empty($_GET['email'])     ? $_GET['email'] : null,
 			!empty($_GET['password'])  ? $_GET['password'] : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null,
-			!empty($_GET['skills'])    ? $_GET['skills'] : null,
-			!empty($_GET['interests']) ? $_GET['interests'] : null,
-			!empty($_GET['feedback'])  ? $_GET['feedback'] : null);
+			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 }
 
 //To return only specific users at given IDs
@@ -83,8 +72,7 @@ function deleteUser($id) {
 }
 
 function createUser($email, $password, $firstName,
-						 $surname, $skills,
-						 $interests, $feedbacks) {
+						 $surname) {
 	$newItem = new stdClass();
 	$newItem->id        = date("zyHis");
 	$newItem->email     = $email;
@@ -92,9 +80,9 @@ function createUser($email, $password, $firstName,
 	$newItem->firstName = $firstName;
 	$newItem->surname   = $surname;
 	$newItem->image     = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->skills    = $skills;
-	$newItem->interests = $interests;
-	$newItem->feedbacks = $feedbacks;
+	$newItem->skills    = array();
+	$newItem->interests = array();
+	$newItem->feedbacks = array();
 	
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	array_push($_youngPeople, $newItem);
@@ -119,12 +107,6 @@ function editUser($id, $email, $password,
 				$person->firstName = $firstName;
 			if ($surname != null)
 				$person->surname = $surname;
-			if ($skills != null)
-				$person->skills = $skills;
-			if ($interests != null)
-				$person->interests = $interests;
-			if ($feedbacks != null)
-				$person->feedbacks = $feedbacks;
 			
 			$returnable = $person;
 		}

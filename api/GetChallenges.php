@@ -16,7 +16,6 @@ if (empty($_GET['edit']) && (
 		   !empty($_GET['challenger'])
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
-		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
@@ -29,7 +28,6 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
-			!empty($_GET['skills'])        ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
@@ -44,7 +42,6 @@ if (empty($_GET['edit']) && (
 		   !empty($_GET['challenger'])
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
-		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
@@ -58,7 +55,6 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
-			!empty($_GET['skills'])        ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
@@ -103,7 +99,7 @@ function deleteChallenge($id) {
 }
 
 function createChallenge($challenger, $adminApproved, $name,
-						 $skills, $description, $reward,
+						 $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees) {
 	$newItem = new stdClass();
@@ -112,7 +108,7 @@ function createChallenge($challenger, $adminApproved, $name,
 	$newItem->adminApproved = $adminApproved;
 	$newItem->name          = $name;
 	$newItem->image         = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->skills        = empty($skills) ? array() : $skills;
+	$newItem->skills        = array();
 	$newItem->description   = $description;
 	$newItem->reward        = $reward;
 	$newItem->location1     = $location1;
@@ -130,7 +126,7 @@ function createChallenge($challenger, $adminApproved, $name,
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $skills, $description, $reward,
+						 $image, $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
@@ -142,8 +138,8 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->challenger = $challenger;
 			if ($adminApproved != null)
 				$thing->adminApproved = $adminApproved;
-			if ($skills != null)
-				$thing->skills = $skills;
+			if ($name != null)
+				$thing->name = $name;
 			if ($description != null)
 				$thing->description = $description;
 			if ($reward != null)
