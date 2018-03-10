@@ -71,7 +71,6 @@ function deleteUser($ids) {
 			array_push($keeps, $person);
 	}
 	
-	
 	$GLOBALS['admins'] = json_encode($keeps);
 	file_put_contents(adminFile, $GLOBALS['admins']);
 	return json_encode($returnable);
