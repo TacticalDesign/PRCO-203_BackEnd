@@ -111,21 +111,22 @@ if (!empty($return))
 //Functions
 //=========
 
-function deleteUser($id) {
+function deleteUser($ids) {
+	$wantedIDs = explode(',', $ids);
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
-	$returnable = false;
+	$keeps = array();
+	$returnable = array();
 	foreach($_youngPeople as $i => $person) {
-		if ($person->id == $id) {
-			unset($_youngPeople[$i]);
-			$_youngPeople = array_values($_youngPeople);
-			$returnable = $person;
-		}
+		if (in_array($person->id, $wantedIDs)) {
+			unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
 	}
 	
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
+	$GLOBALS['youngPeople'] = json_encode($keeps);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	unset($returnable->password);
 	return json_encode($returnable);
 }
 

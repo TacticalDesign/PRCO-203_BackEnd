@@ -123,21 +123,21 @@ if (!empty($return))
 //Functions
 //=========
 
-function deleteChallenge($id) {
+function deleteChallenge($ids) {
+	$wantedIDs = explode(',', $ids);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
-	$returnable = false;
+	$keeps = array();
+	$returnable = array();
 	foreach($_challenges as $i => $thing) {
-		if ($thing->id == $id) {
-			unset($_challenges[$i]);
-			$_challenges = array_values($_challenges);
-			$returnable = $thing;
-		}
+		if (in_array($thing->id, $wantedIDs))
+			array_push($returnable, $thing);
+		else 
+			array_push($keeps, $thing);
 	}
 	
-	$GLOBALS['challenges'] = json_encode($_challenges);
+	$GLOBALS['challenges'] = json_encode($keeps);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	unset($returnable->password);
 	return json_encode($returnable);
 }
 

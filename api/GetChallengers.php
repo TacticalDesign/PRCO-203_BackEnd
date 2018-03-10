@@ -107,21 +107,23 @@ if (!empty($return))
 //Functions
 //=========
 
-function deleteUser($id) {
+function deleteUser($ids) {
+	$wantedIDs = explode(',', $ids);
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
-	$success = false;
+	$keeps = array();
+	$returnable = array();
 	foreach($_challengers as $i => $person) {
-		if ($person->id == $id) {
-			unset($_challengers[$i]);
-			$_challengers = array_values($_challengers);
-			$success = $person;
-		}
+		if (in_array($person->id, $wantedIDs) {
+			unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
 	}
 	
-	$GLOBALS['challengers'] = json_encode($_challengers);
+	$GLOBALS['challengers'] = json_encode($keeps);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($success);
+	return json_encode($returnable);
 }
 
 function createUser($email, $password, $name, $colour,

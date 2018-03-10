@@ -57,21 +57,23 @@ else if (!empty($_GET['search'])) {
 if (!empty($return))
 	echo $return;
 
-function deleteUser($id) {
+function deleteUser($ids) {
+	$wantedIDs = explode(',', $ids);
 	$_admins = json_decode($GLOBALS['admins']);
 	
-	$returnable = false;
+	$keeps = array();
+	$returnable = array();
 	foreach($_admins as $i => $person) {
-		if ($person->id == $id) {
-			unset($_admins[$i]);
-			$_admins = array_values($_admins);
-			$returnable = $person;
-		}
+		if (in_array($person->id, $wantedIDs)) {
+			unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
 	}
 	
-	$GLOBALS['admins'] = json_encode($_admins);
+	
+	$GLOBALS['admins'] = json_encode($keeps);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	unset($returnable->password);
 	return json_encode($returnable);
 }
 
