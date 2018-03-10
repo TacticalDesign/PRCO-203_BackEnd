@@ -8,11 +8,6 @@ $return = "false";
 
 $challenges = file_get_contents(currentChallengesFile);
 
-//To delete a challenge with a given ID
-if (onlyKeyword('delete', $keywords)) {
-	$return = deleteChallenge($_GET['delete']);
-}
-
 //To create a new challenge with a given name
 if (onlyKeyword('new', $keywords) &&
 	atLeastOne(array('challenger', 'adminApproved', 'name', 'skills', 'description', 'reward'
@@ -74,17 +69,23 @@ else if (onlyKeyword('pop', $keywords) &&
 			!empty($_GET['attendees']) ? $_GET['attendees'] : array());
 }
 
+//To delete a challenge with a given ID
+else if (onlyKeyword('delete', $keywords)) {
+	$return = deleteChallenge(arrayStrip($_GET['delete']));
+}
+
 //To return only specific challenges with given IDs
 else if (onlyKeyword('find', $keywords)) {
-	$return = findChallenges($_GET['find'],
-			!empty($_GET['where']) ? $_GET['where'] : null);
+	$return = findChallenges(
+			arrayStrip($_GET['find']),
+			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
 }
 
 //To search for challenges with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchChallenges(
-			$_GET['search'],
-			!empty($_GET['where']) ? $_GET['where'] : null);
+			arrayStrip($_GET['search']),
+			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
 }
 
 //Return a value if needed

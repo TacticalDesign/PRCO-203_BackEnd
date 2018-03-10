@@ -61,20 +61,21 @@ else if (onlyKeyword('pop', $keywords) &&
 
 //To delete a challenger with a given ID
 else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser($_GET['delete']);
+	$return = deleteUser(arrayStrip($_GET['delete']));
 }
 
-//To return only specific challengers at given IDs
+//To return only specific challengers with given IDs
 else if (onlyKeyword('find', $keywords)) {
-	$return = findUsers($_GET['find'],
-			!empty($_GET['where']) ? $_GET['where'] : null);
+	$return = findUsers(
+			arrayStrip($_GET['find']),
+			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
 }
 
 //To search for challengers with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-			$_GET['search'],
-			!empty($_GET['where']) ? $_GET['where'] : null);
+			arrayStrip($_GET['search']),
+			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
 }
 
 //Return a value if needed
