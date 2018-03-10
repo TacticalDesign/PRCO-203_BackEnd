@@ -29,14 +29,15 @@ else if (onlyKeyword('edit', $keywords) &&
 			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
 }
 
-//To delete an admin at a given ID
+//To delete an admin with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteUser($_GET['delete']);
 }
 
-//To find only specific admins at given IDs
+//To find only specific admins with given IDs
 else if (onlyKeyword('find', $keywords)) {
-	$return = findUsers($_GET['find'],
+	$return = findUsers(
+			$_GET['find'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 

@@ -3,30 +3,17 @@
 include("Locations.php");
 include("Tools.php");
 
+$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 $return = "false";
 
 $challengers = file_get_contents(challengerFile);
 
-//To delete a challenger at a given ID
-if (!empty($_GET['delete'])) {
-	$return = deleteUser($_GET['delete']);
-}
-
-//To create a new challenger when no ID is given
-if (empty($_GET['edit']) &&
-	empty($_GET['push']) && 
-	empty($_GET['pop']) && (
-		   !empty($_GET['email'])
-		|| !empty($_GET['password'])
-		|| !empty($_GET['name'])
-		|| !empty($_GET['colour'])
-		|| !empty($_GET['contactEmail'])
-		|| !empty($_GET['contactPhone'])
-		|| !empty($_GET['about'])
-		|| !empty($_GET['currentChallenges'])
-		|| !empty($_GET['archivedChallenges']))) {
+//To create a new challenger with a given email
+if (onlyKeyword('new', $keywords) &&
+	atLeastOne(array('password', 'name', 'colour', 'contactEmail', 'contactPhone',
+					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = createUser(
-			!empty($_GET['email'])              ? arrayStrip($_GET['email']) : null,
+			arrayStrip($_GET['new']),
 			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
 			!empty($_GET['name'])               ? arrayStrip($_GET['name']) : null,
 			!empty($_GET['colour'])             ? arrayStrip($_GET['colour']) : null,
@@ -37,19 +24,10 @@ if (empty($_GET['edit']) &&
 		    !empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
 }
 
-//To edit an existing challenger at a given ID
-else if (!empty($_GET['edit']) &&
-		 empty($_GET['push']) && 
-		 empty($_GET['pop']) && (
-			   !empty($_GET['email'])
-			|| !empty($_GET['password'])
-			|| !empty($_GET['name'])
-			|| !empty($_GET['colour'])
-			|| !empty($_GET['contactEmail'])
-			|| !empty($_GET['contactPhone'])
-			|| !empty($_GET['about'])
-			|| !empty($_GET['currentChallenges'])
-			|| !empty($_GET['archivedChallenges']))) {
+//To edit an existing challenger with a given ID
+else if (onlyKeyword('edit', $keywords) &&
+		 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
+					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
 			arrayStrip($_GET['edit']),
 			!empty($_GET['email'])              ? arrayStrip($_GET['email'] : null,
@@ -64,37 +42,36 @@ else if (!empty($_GET['edit']) &&
 }
 			
 //To push values to a young person's array contents
-else if ( empty($_GET['edit']) &&
-		 !empty($_GET['push']) && 
-		  empty($_GET['pop']) &&(
-			   !empty($_GET['currentChallenges'])
-			|| !empty($_GET['archivedChallenges']))) {
+else if (onlyKeyword('push', $keywords) &&
+		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = pushUser(
-			$_GET['push'],
+			arrayStrip($_GET['push']),
 			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
 			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
 }
 
 //To pop values from a young person's array contents
-else if ( empty($_GET['edit']) &&
-		  empty($_GET['push']) && 
-		 !empty($_GET['pop']) &&(
-			   !empty($_GET['currentChallenges'])
-			|| !empty($_GET['archivedChallenges']))) {
+else if (onlyKeyword('pop', $keywords) &&
+		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = popUser(
-			$_GET['pop'],
+			arrayStrip($_GET['pop']),
 			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
 			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
 }
 
+//To delete a challenger with a given ID
+else if (onlyKeyword('delete', $keywords)) {
+	$return = deleteUser($_GET['delete']);
+}
+
 //To return only specific challengers at given IDs
-else if (!empty($_GET['find'])) {
+else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers($_GET['find'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
 //To search for challengers with a search term
-else if (!empty($_GET['search'])) {
+else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
 			$_GET['search'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
