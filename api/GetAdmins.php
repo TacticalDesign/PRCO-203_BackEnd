@@ -3,36 +3,24 @@
 include("Locations.php");
 include("Tools.php");
 
+$keywords = array('new', 'edit', 'delete', 'find', 'search');
 $return = "false";
 
 $admins = file_get_contents(adminFile);
 
-//To delete an admin at a given ID
-if (!empty($_GET['delete'])) {
-	$return = deleteUser($_GET['delete']);
-}
-
-//To create a new admin when no ID is given
-if (empty($_GET['edit']) &&
-	empty($_GET['push']) && 
-	empty($_GET['pop']) && (
-		   !empty($_GET['email'])
-		|| !empty($_GET['password'])
-		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname']))) {
+//To create a new admin with a given email
+if (onlyKeyword('new', $keywords) &&
+	atLeastOne(array('password', 'firstName', 'surname'))) {
 	$return = createUser(
-			!empty($_GET['email'])     ? arrayStrip($_GET['email']) : null,
+			arrayStrip($_GET['new']),
 			!empty($_GET['password'])  ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
 			!empty($_GET['firstName']) ? arrayStrip($_GET['firstName']) : null,
 			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
 }
 
-//To edit an existing admin at a given ID
-else if (!empty($_GET['edit']) && (
-		   !empty($_GET['email'])
-		|| !empty($_GET['password'])
-		|| !empty($_GET['firstName'])
-		|| !empty($_GET['surname']))) {
+//To edit an existing admin with a given ID
+else if (onlyKeyword('edit', $keywords) &&
+		 atLeastOne(array('email', 'password', 'firstName', 'surname'))) {
 	$return = editUser(
 			arrayStrip($_GET['edit']),
 			!empty($_GET['email'])     ? arrayStrip($_GET['email']) : null,
@@ -41,13 +29,19 @@ else if (!empty($_GET['edit']) && (
 			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
 }
 
-//To return only specific admins at given IDs
-else if (!empty($_GET['find'])) {
+//To delete an admin at a given ID
+else if (onlyKeyword('delete', $keywords)) {
+	$return = deleteUser($_GET['delete']);
+}
+
+//To find only specific admins at given IDs
+else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers($_GET['find'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
-else if (!empty($_GET['search'])) {
+//To search for admins with a query
+else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
 			$_GET['search'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
@@ -57,27 +51,10 @@ else if (!empty($_GET['search'])) {
 if (!empty($return))
 	echo $return;
 
-function deleteUser($ids) {
-	$wantedIDs = explode(',', $ids);
-	$_admins = json_decode($GLOBALS['admins']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_admins as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			unset($person->password);
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
-	}
-	
-	$GLOBALS['admins'] = json_encode($keeps);
-	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode($returnable);
-}
+//Functions
+//=========
 
-function createUser($email, $password, $firstName,
-						 $surname) {
+function createUser($email, $password, $firstName, $surname) {
 	$returnable = new stdClass();
 	$returnable->id        = date("zyHis");
 	$returnable->email     = $email;
@@ -94,8 +71,7 @@ function createUser($email, $password, $firstName,
 	return json_encode($returnable);
 }
 
-function editUser($id, $email, $password,
-						$firstName, $surname) {
+function editUser($id, $email, $password, $firstName, $surname) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
@@ -117,6 +93,25 @@ function editUser($id, $email, $password,
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
 	unset($returnable->password);
+	return json_encode($returnable);
+}
+
+function deleteUser($ids) {
+	$wantedIDs = explode(',', $ids);
+	$_admins = json_decode($GLOBALS['admins']);
+	
+	$keeps = array();
+	$returnable = array();
+	foreach($_admins as $i => $person) {
+		if (in_array($person->id, $wantedIDs)) {
+			unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
+	}
+	
+	$GLOBALS['admins'] = json_encode($keeps);
+	file_put_contents(adminFile, $GLOBALS['admins']);
 	return json_encode($returnable);
 }
 

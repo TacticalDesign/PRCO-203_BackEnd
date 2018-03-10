@@ -7,4 +7,20 @@ function arrayStrip($mixed) {
 		return $mixed;
 }
 
+function onlyKeyword($keyword, $keywords) {
+	foreach	($keywords as $i => $key) {
+		if ($key != $keyword && !empty($_GET[$key]))
+			return false;
+	}
+	return !empty($_GET[$keyword]);
+}
+
+function atLeastOne($values) {
+	foreach ($values as $i => $value) {
+		if (!empty($_GET[$value]))
+			return true;
+	}
+	return false;
+}
+
 ?>
