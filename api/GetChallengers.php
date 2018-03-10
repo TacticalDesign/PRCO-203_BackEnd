@@ -70,7 +70,7 @@ else if (onlyKeyword('find', $keywords)) {
 			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
-//To search for challengers with a search term
+//To search for challengers with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
 			$_GET['search'],
