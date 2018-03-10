@@ -8,76 +8,82 @@ $return = "false";
 
 $youngPeople = file_get_contents(youngPeopleFile);
 
-//To delete a young person with a given ID
-if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(arrayStrip($_GET['delete']));
-}
-
 //To create a new young person with a given email
-if (onlyKeyword('new', $keywords) && 
-	atLeastOne(array('password', 'firstName', 'surname', 'skills', 'interests',
-			   'currentChallenges', 'archivedChallenges'))) {
+if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
-		   arrayStrip($_GET['new']),
-		   !empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-		   !empty($_GET['firstName'])          ? arrayStrip($_GET['firstName']) : null,
-		   !empty($_GET['surname'])            ? arrayStrip($_GET['surname']) : null,
-		   !empty($_GET['skills'])             ? $_GET['skills'] : array(),
-		   !empty($_GET['interests'])          ? $_GET['interests'] : array(),
-		   !empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-		   !empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('new'),
+		getEncrypted('password'),
+		getVar('firstName'),
+		getVar('surname'),
+		getArray('skills'),
+		getArray('interests'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 
 //To edit an existing young person at a given ID
 else if (onlyKeyword('edit', $keywords) && 
-	atLeastOne(array('email', 'password', 'firstName', 'surname', 'skills',
+		 atLeastOne(array('email', 'password', 'firstName', 'surname', 'skills',
 				     'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
-			arrayStrip($_GET['edit']),
-			!empty($_GET['email'])              ? arrayStrip($_GET['email']) : null,
-			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-			!empty($_GET['firstName'])          ? arrayStrip($_GET['firstName']) : null,
-			!empty($_GET['surname'])            ? arrayStrip($_GET['surname']) : null,
-			!empty($_GET['skills'])             ? $_GET['skills'] : null,
-			!empty($_GET['interests'])          ? $_GET['interests'] : null,
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
+		getVar('edit'),
+		getVar('email'),
+		getEncrypted('password'),
+		getVar('firstName'),
+		getVar('surname'),
+		getArray('skills'),
+		getArray('interests'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 			
 //To push values to a young person's array contents
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = pushUser(
-			arrayStrip($_GET['push']),
-			!empty($_GET['skills'])             ? $_GET['skills'] : array(),
-			!empty($_GET['interests'])          ? $_GET['interests'] : array(),
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('push'),
+		getArray('skills'),
+		getArray('interests'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 
 //To pop values from a young person's array contents
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = popUser(
-			arrayStrip($_GET['pop']),
-			!empty($_GET['skills'])             ? $_GET['skills'] : array(),
-			!empty($_GET['interests'])          ? $_GET['interests'] : array(),
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('pop'),
+		getArray('skills'),
+		getArray('interests'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
+}
+
+//To delete a young person with a given ID
+else if (onlyKeyword('delete', $keywords)) {
+	$return = deleteUser(
+		getVar('delete')
+	);
 }
 
 //To return only specific young people with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-			arrayStrip($_GET['find']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('find'),
+		getVar('where')
+	);
 }
 
 //To search all young people for a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-			arrayStrip($_GET['search']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('search'),
+		getVar('where')
+	);
 }
 
 //Return a value if needed

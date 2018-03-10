@@ -13,15 +13,16 @@ if (onlyKeyword('new', $keywords) &&
 	atLeastOne(array('password', 'name', 'colour', 'contactEmail', 'contactPhone',
 					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = createUser(
-			arrayStrip($_GET['new']),
-			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-			!empty($_GET['name'])               ? arrayStrip($_GET['name']) : null,
-			!empty($_GET['colour'])             ? arrayStrip($_GET['colour']) : null,
-			!empty($_GET['contactEmail'])       ? arrayStrip($_GET['contactEmail']) : null,
-			!empty($_GET['contactPhone'])       ? arrayStrip($_GET['contactPhone']) : null,
-			!empty($_GET['about'])              ? arrayStrip($_GET['about']) : null,
-		    !empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-		    !empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('new'),
+		getEncrypted('password'),
+		getVar('name'),
+		getVar('colour'),
+		getVar('contactEmail'),
+		getVar('contactPhone'),
+		getVar('about'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 
 //To edit an existing challenger with a given ID
@@ -29,53 +30,60 @@ else if (onlyKeyword('edit', $keywords) &&
 		 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
 					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
-			arrayStrip($_GET['edit']),
-			!empty($_GET['email'])              ? arrayStrip($_GET['email'] : null,
-			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-			!empty($_GET['name'])               ? arrayStrip($_GET['name']) : null,
-			!empty($_GET['colour'])             ? arrayStrip($_GET['colour']) : null,
-			!empty($_GET['contactEmail'])       ? arrayStrip($_GET['contactEmail']) : null,
-			!empty($_GET['contactPhone'])       ? arrayStrip($_GET['contactPhone']) : null,
-			!empty($_GET['about'])              ? arrayStrip($_GET['about']) : null,
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
+		getVar('edit'),
+		getVar('email'),
+		getEncrypted('password'),
+		getVar('name'),
+		getVar('colour'),
+		getVar('contactEmail'),
+		getVar('contactPhone'),
+		getVar('about'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 			
 //To push values to a young person's array contents
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = pushUser(
-			arrayStrip($_GET['push']),
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('push'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 
 //To pop values from a young person's array contents
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = popUser(
-			arrayStrip($_GET['pop']),
-			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
-			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+		getVar('pop'),
+		getArray('currentChallenges'),
+		getArray('archivedChallenges')
+	);
 }
 
 //To delete a challenger with a given ID
 else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(arrayStrip($_GET['delete']));
+	$return = deleteUser(
+		getVar('delete')
+	);
 }
 
 //To return only specific challengers with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-			arrayStrip($_GET['find']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('find'),
+		getVar('where')
+	);
 }
 
 //To search for challengers with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-			arrayStrip($_GET['search']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('search'),
+		getVar('where')
+	);
 }
 
 //Return a value if needed

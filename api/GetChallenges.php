@@ -14,19 +14,20 @@ if (onlyKeyword('new', $keywords) &&
 					 'location1', 'location2', 'location3', 'closingTime', 'minAttendees',
 					 'maxAttendees', 'attendees'))) {
 	$return = createChallenge(
-			!empty($_GET['challenger'])    ? arrayStrip($_GET['challenger']) : null,
-			!empty($_GET['adminApproved']) ? arrayStrip($_GET['adminApproved']) : null,
-			arrayStrip($_GET['new']),
-			!empty($_GET['skills'])        ? $_GET['skills'] : array(),
-			!empty($_GET['description'])   ? arrayStrip($_GET['description']) : null,
-			!empty($_GET['reward'])        ? arrayStrip($_GET['reward']) : null,
-			!empty($_GET['location1'])     ? arrayStrip($_GET['location1']) : null,
-			!empty($_GET['location2'])     ? arrayStrip($_GET['location2']) : null,
-			!empty($_GET['location3'])     ? arrayStrip($_GET['location3']) : null,
-			!empty($_GET['closingTime'])   ? arrayStrip($_GET['closingTime']) : null,
-			!empty($_GET['minAttendees'])  ? arrayStrip($_GET['minAttendees']) : null,
-			!empty($_GET['maxAttendees'])  ? arrayStrip($_GET['maxAttendees']) : null,
-			!empty($_GET['attendees'])     ? $_GET['attendees'] : array());
+		getVar('challenger'),
+		getVar('adminApproved'),
+		getVar('new'),
+		getArray('skills'),
+		getVar('description'),
+		getVar('reward'),
+		getVar('location1'),
+		getVar('location2'),
+		getVar('location3'),
+		getVar('closingTime'),
+		getVar('minAttendees'),
+		getVar('maxAttendees'),
+		getArray('attendees')
+	);
 }
 
 //To edit an existing challenge with a given ID
@@ -35,57 +36,64 @@ else if (onlyKeyword('edit', $keywords) &&
 					      'location1', 'location2', 'location3', 'closingTime', 'minAttendees',
 					      'maxAttendees', 'attendees'))) {
 	$return = editChallenge(
-			arrayStrip($_GET['edit']),
-			!empty($_GET['challenger'])    ? arrayStrip($_GET['challenger']) : null,
-			!empty($_GET['adminApproved']) ? arrayStrip($_GET['adminApproved']) : null,
-			!empty($_GET['name'])          ? arrayStrip($_GET['name']) : null,
-			!empty($_GET['skills'])        ? $_GET['skills'] : null,
-			!empty($_GET['description'])   ? arrayStrip($_GET['description']) : null,
-			!empty($_GET['reward'])        ? arrayStrip($_GET['reward']) : null,
-			!empty($_GET['location1'])     ? arrayStrip($_GET['location1']) : null,
-			!empty($_GET['location2'])     ? arrayStrip($_GET['location2']) : null,
-			!empty($_GET['location3'])     ? arrayStrip($_GET['location3']) : null,
-			!empty($_GET['closingTime'])   ? arrayStrip($_GET['closingTime']) : null,
-			!empty($_GET['minAttendees'])  ? arrayStrip($_GET['minAttendees']) : null,
-			!empty($_GET['maxAttendees'])  ? arrayStrip($_GET['maxAttendees']) : null,
-			!empty($_GET['attendees'])     ? $_GET['attendees'] : null);
+		getVar('edit'),
+		getVar('challenger'),
+		getVar('adminApproved'),
+		getVar('name'),
+		getArray('skills'),
+		getVar('description'),
+		getVar('reward'),
+		getVar('location1'),
+		getVar('location2'),
+		getVar('location3'),
+		getVar('closingTime'),
+		getVar('minAttendees'),
+		getVar('maxAttendees'),
+		getArray('attendees')
+	);
 }
 			
 //To push values to a challenges array contents
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('skills', 'attendees'))) {
 	$return = pushChallenge(
-			$_GET['push'],
-			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
-			!empty($_GET['attendees']) ? $_GET['attendees'] : array());
+		getVar('push'),
+		getArray('skills'),
+		getArray('attendees')
+	);
 }
 
 //To pop values from a challenges array contents
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('skills', 'attendees'))) {
 	$return = popChallenge(
-			$_GET['pop'],
-			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
-			!empty($_GET['attendees']) ? $_GET['attendees'] : array());
+		getVar('pop'),
+		getArray('skills'),
+		getArray('attendees')
+	);
 }
 
 //To delete a challenge with a given ID
 else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteChallenge(arrayStrip($_GET['delete']));
+	$return = deleteChallenge(
+		getVar('delete')
+	);
 }
 
 //To return only specific challenges with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findChallenges(
-			arrayStrip($_GET['find']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('find'),
+		getVar('where')
+	);
 }
 
 //To search for challenges with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchChallenges(
-			arrayStrip($_GET['search']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('search'),
+		getVar('where')
+	);
 }
 
 //Return a value if needed

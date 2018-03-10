@@ -12,40 +12,46 @@ $admins = file_get_contents(adminFile);
 if (onlyKeyword('new', $keywords) &&
 	atLeastOne(array('password', 'firstName', 'surname'))) {
 	$return = createUser(
-			arrayStrip($_GET['new']),
-			!empty($_GET['password'])  ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-			!empty($_GET['firstName']) ? arrayStrip($_GET['firstName']) : null,
-			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
+		getVar('new'),
+		getEncrypted('password'),
+		getVar('firstName'),
+		getVar('surname')
+	);
 }
 
 //To edit an existing admin with a given ID
 else if (onlyKeyword('edit', $keywords) &&
 		 atLeastOne(array('email', 'password', 'firstName', 'surname'))) {
 	$return = editUser(
-			arrayStrip($_GET['edit']),
-			!empty($_GET['email'])     ? arrayStrip($_GET['email']) : null,
-			!empty($_GET['password'])  ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
-			!empty($_GET['firstName']) ? arrayStrip($_GET['firstName']) : null,
-			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
+		getVar('edit'),
+		getVar('email'),
+		getEncrypted('password'),
+		getVar('firstName'),
+		getVar('surname')
+	);
 }
 
 //To delete an admin with a given ID
 else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(arrayStrip($_GET['delete']));
+	$return = deleteUser(
+		getVar('delete')
+	);
 }
 
 //To find only specific admins with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-			arrayStrip($_GET['find']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('find'),
+		getVar('where')
+	);
 }
 
 //To search for admins with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-			arrayStrip($_GET['search']),
-			!empty($_GET['where']) ? arrayStrip($_GET['where']) : null);
+		getVar('search'),
+		getVar('where')
+	);
 }
 
 //Return a value if needed
