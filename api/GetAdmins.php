@@ -1,6 +1,7 @@
 <?php
 
 include("Locations.php");
+include("Tools.php");
 
 $return = "false";
 
@@ -20,10 +21,10 @@ if (empty($_GET['edit']) &&
 		|| !empty($_GET['firstName'])
 		|| !empty($_GET['surname']))) {
 	$return = createUser(
-			!empty($_GET['email'])     ? $_GET['email'] : null,
-			!empty($_GET['password'])  ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
-			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null);
+			!empty($_GET['email'])     ? arrayStrip($_GET['email']) : null,
+			!empty($_GET['password'])  ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
+			!empty($_GET['firstName']) ? arrayStrip($_GET['firstName']) : null,
+			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
 }
 
 //To edit an existing admin at a given ID
@@ -33,11 +34,11 @@ else if (!empty($_GET['edit']) && (
 		|| !empty($_GET['firstName'])
 		|| !empty($_GET['surname']))) {
 	$return = editUser(
-			!empty($_GET['edit'])      ? $_GET['edit'] : null,
-			!empty($_GET['email'])     ? $_GET['email'] : null,
-			!empty($_GET['password'])  ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
-			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
-			!empty($_GET['surname'])   ? $_GET['surname'] : null);
+			arrayStrip($_GET['edit']),
+			!empty($_GET['email'])     ? arrayStrip($_GET['email']) : null,
+			!empty($_GET['password'])  ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
+			!empty($_GET['firstName']) ? arrayStrip($_GET['firstName']) : null,
+			!empty($_GET['surname'])   ? arrayStrip($_GET['surname']) : null);
 }
 
 //To return only specific admins at given IDs

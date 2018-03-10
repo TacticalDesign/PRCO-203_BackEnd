@@ -1,6 +1,7 @@
 <?php
 
 include("Locations.php");
+include("Tools.php");
 
 $return = "false";
 
@@ -25,13 +26,13 @@ if (empty($_GET['edit']) &&
 		|| !empty($_GET['currentChallenges'])
 		|| !empty($_GET['archivedChallenges']))) {
 	$return = createUser(
-			!empty($_GET['email'])              ? $_GET['email'] : null,
-			!empty($_GET['password'])           ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
-			!empty($_GET['name'])               ? $_GET['name'] : null,
-			!empty($_GET['colour'])             ? $_GET['colour'] : null,
-			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
-			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null,
+			!empty($_GET['email'])              ? arrayStrip($_GET['email']) : null,
+			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
+			!empty($_GET['name'])               ? arrayStrip($_GET['name']) : null,
+			!empty($_GET['colour'])             ? arrayStrip($_GET['colour']) : null,
+			!empty($_GET['contactEmail'])       ? arrayStrip($_GET['contactEmail']) : null,
+			!empty($_GET['contactPhone'])       ? arrayStrip($_GET['contactPhone']) : null,
+			!empty($_GET['about'])              ? arrayStrip($_GET['about']) : null,
 		    !empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
 		    !empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
 }
@@ -50,14 +51,14 @@ else if (!empty($_GET['edit']) &&
 			|| !empty($_GET['currentChallenges'])
 			|| !empty($_GET['archivedChallenges']))) {
 	$return = editUser(
-			$_GET['edit'],
-			!empty($_GET['email'])              ? $_GET['email'] : null,
-			!empty($_GET['password'])           ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
-			!empty($_GET['name'])               ? $_GET['name'] : null,
-			!empty($_GET['colour'])             ? $_GET['colour'] : null,
-			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
-			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null,
+			arrayStrip($_GET['edit']),
+			!empty($_GET['email'])              ? arrayStrip($_GET['email'] : null,
+			!empty($_GET['password'])           ? password_hash(arrayStrip($_GET['password']), PASSWORD_BCRYPT) : null,
+			!empty($_GET['name'])               ? arrayStrip($_GET['name']) : null,
+			!empty($_GET['colour'])             ? arrayStrip($_GET['colour']) : null,
+			!empty($_GET['contactEmail'])       ? arrayStrip($_GET['contactEmail']) : null,
+			!empty($_GET['contactPhone'])       ? arrayStrip($_GET['contactPhone']) : null,
+			!empty($_GET['about'])              ? arrayStrip($_GET['about']) : null,
 			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
 			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
 }

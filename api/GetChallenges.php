@@ -1,6 +1,7 @@
 <?php
 
 include("Locations.php");
+include("Tools.php");
 
 $return = "false";
 
@@ -29,18 +30,18 @@ if (empty($_GET['edit']) &&
 		|| !empty($_GET['maxAttendees'])
 		|| !empty($_GET['attendees']))) {
 	$return = createChallenge(
-			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
-			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
-			!empty($_GET['name'])          ? $_GET['name'] : null,
+			!empty($_GET['challenger'])    ? arrayStrip($_GET['challenger']) : null,
+			!empty($_GET['adminApproved']) ? arrayStrip($_GET['adminApproved']) : null,
+			!empty($_GET['name'])          ? arrayStrip($_GET['name']) : null,
 			!empty($_GET['skills'])        ? $_GET['skills'] : array(),
-			!empty($_GET['description'])   ? $_GET['description'] : null,
-			!empty($_GET['reward'])        ? $_GET['reward'] : null,
-			!empty($_GET['location1'])     ? $_GET['location1'] : null,
-			!empty($_GET['location2'])     ? $_GET['location2'] : null,
-			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
-			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
-			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null,
+			!empty($_GET['description'])   ? arrayStrip($_GET['description']) : null,
+			!empty($_GET['reward'])        ? arrayStrip($_GET['reward']) : null,
+			!empty($_GET['location1'])     ? arrayStrip($_GET['location1']) : null,
+			!empty($_GET['location2'])     ? arrayStrip($_GET['location2']) : null,
+			!empty($_GET['location3'])     ? arrayStrip($_GET['location3']) : null,
+			!empty($_GET['closingTime'])   ? arrayStrip($_GET['closingTime']) : null,
+			!empty($_GET['minAttendees'])  ? arrayStrip($_GET['minAttendees']) : null,
+			!empty($_GET['maxAttendees'])  ? arrayStrip($_GET['maxAttendees']) : null,
 			!empty($_GET['attendees'])     ? $_GET['attendees'] : array());
 }
 
@@ -62,19 +63,19 @@ else if (!empty($_GET['edit']) &&
 		|| !empty($_GET['maxAttendees'])
 		|| !empty($_GET['attendees']))) {
 	$return = editChallenge(
-			!empty($_GET['edit'])          ? $_GET['edit'] : null,
-			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
-			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
-			!empty($_GET['name'])          ? $_GET['name'] : null,
+			arrayStrip($_GET['edit']),
+			!empty($_GET['challenger'])    ? arrayStrip($_GET['challenger']) : null,
+			!empty($_GET['adminApproved']) ? arrayStrip($_GET['adminApproved']) : null,
+			!empty($_GET['name'])          ? arrayStrip($_GET['name']) : null,
 			!empty($_GET['skills'])        ? $_GET['skills'] : null,
-			!empty($_GET['description'])   ? $_GET['description'] : null,
-			!empty($_GET['reward'])        ? $_GET['reward'] : null,
-			!empty($_GET['location1'])     ? $_GET['location1'] : null,
-			!empty($_GET['location2'])     ? $_GET['location2'] : null,
-			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
-			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
-			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null,
+			!empty($_GET['description'])   ? arrayStrip($_GET['description']) : null,
+			!empty($_GET['reward'])        ? arrayStrip($_GET['reward']) : null,
+			!empty($_GET['location1'])     ? arrayStrip($_GET['location1']) : null,
+			!empty($_GET['location2'])     ? arrayStrip($_GET['location2']) : null,
+			!empty($_GET['location3'])     ? arrayStrip($_GET['location3']) : null,
+			!empty($_GET['closingTime'])   ? arrayStrip($_GET['closingTime']) : null,
+			!empty($_GET['minAttendees'])  ? arrayStrip($_GET['minAttendees']) : null,
+			!empty($_GET['maxAttendees'])  ? arrayStrip($_GET['maxAttendees']) : null,
 			!empty($_GET['attendees'])     ? $_GET['attendees'] : null);
 }
 			
