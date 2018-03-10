@@ -12,10 +12,13 @@ if (!empty($_GET['delete'])) {
 }
 
 //To create a new challenge when no ID is given 
-if (empty($_GET['edit']) && (
+if (empty($_GET['edit']) &&
+	empty($_GET['push']) && 
+	empty($_GET['pop']) && (
 		   !empty($_GET['challenger'])
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
+		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
@@ -23,11 +26,13 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['location3'])
 		|| !empty($_GET['closingTime'])
 		|| !empty($_GET['minAttendees'])
-		|| !empty($_GET['maxAttendees']))) {
+		|| !empty($_GET['maxAttendees'])
+		|| !empty($_GET['attendees']))) {
 	$return = createChallenge(
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
+			!empty($_GET['skills'])        ? $_GET['skills'] : array(),
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
@@ -35,13 +40,18 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['location3'])     ? $_GET['location3'] : null,
 			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
 			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
-			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null);
+			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null,
+			!empty($_GET['attendees'])     ? $_GET['attendees'] : array());
+}
 
 //To edit an existing challenge at a given ID
-} elseif (!empty($_GET['edit']) && (
+else if (!empty($_GET['edit']) &&
+		  empty($_GET['push']) && 
+		  empty($_GET['pop']) && (
 		   !empty($_GET['challenger'])
 		|| !empty($_GET['adminApproved'])
 		|| !empty($_GET['name'])
+		|| !empty($_GET['skills'])
 		|| !empty($_GET['description'])
 		|| !empty($_GET['reward'])
 		|| !empty($_GET['location1'])
@@ -49,12 +59,14 @@ if (empty($_GET['edit']) && (
 		|| !empty($_GET['location3'])
 		|| !empty($_GET['closingTime'])
 		|| !empty($_GET['minAttendees'])
-		|| !empty($_GET['maxAttendees']))) {
+		|| !empty($_GET['maxAttendees'])
+		|| !empty($_GET['attendees']))) {
 	$return = editChallenge(
 			!empty($_GET['edit'])          ? $_GET['edit'] : null,
 			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
 			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
 			!empty($_GET['name'])          ? $_GET['name'] : null,
+			!empty($_GET['skills'])        ? $_GET['skills'] : null,
 			!empty($_GET['description'])   ? $_GET['description'] : null,
 			!empty($_GET['reward'])        ? $_GET['reward'] : null,
 			!empty($_GET['location1'])     ? $_GET['location1'] : null,
@@ -62,15 +74,41 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['location3'])     ? $_GET['location3'] : null,
 			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null,
 			!empty($_GET['minAttendees'])  ? $_GET['minAttendees'] : null,
-			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null);
+			!empty($_GET['maxAttendees'])  ? $_GET['maxAttendees'] : null,
+			!empty($_GET['attendees'])     ? $_GET['attendees'] : null);
+}
+			
+//To push values to a challenges array contents
+else if ( empty($_GET['edit']) &&
+		 !empty($_GET['push']) && 
+		  empty($_GET['pop']) &&(
+			   !empty($_GET['skills'])
+			|| !empty($_GET['attendees']))) {
+	$return = pushChallenge(
+			$_GET['push'],
+			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
+			!empty($_GET['attendees']) ? $_GET['attendees'] : array());
 }
 
-//To return only specific items at given IDs
+//To pop values from a challenges array contents
+else if ( empty($_GET['edit']) &&
+		  empty($_GET['push']) && 
+		 !empty($_GET['pop']) &&(
+			   !empty($_GET['skills'])
+			|| !empty($_GET['attendees']))) {
+	$return = popChallenge(
+			$_GET['pop'],
+			!empty($_GET['skills'])    ? $_GET['skills'] : array(),
+			!empty($_GET['attendees']) ? $_GET['attendees'] : array());
+}
+
+//To return only specific challenges at given IDs
 else if (!empty($_GET['find'])) {
 	$return = findChallenges($_GET['find'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
 }
 
+//To search for challenges with a search term
 else if (!empty($_GET['search'])) {
 	$return = searchChallenges(
 			$_GET['search'],
@@ -80,6 +118,9 @@ else if (!empty($_GET['search'])) {
 //Return a value if needed
 if (!empty($return))
 	echo $return;
+
+//Functions
+//=========
 
 function deleteChallenge($id) {
 	$_challenges = json_decode($GLOBALS['challenges']);
@@ -99,16 +140,16 @@ function deleteChallenge($id) {
 }
 
 function createChallenge($challenger, $adminApproved, $name,
-						 $description, $reward,
+						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$newItem = new stdClass();
 	$newItem->id            = date("zyHis");
 	$newItem->challenger    = $challenger;
 	$newItem->adminApproved = $adminApproved;
 	$newItem->name          = $name;
 	$newItem->image         = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->skills        = array();
+	$newItem->skills        = $skills;
 	$newItem->description   = $description;
 	$newItem->reward        = $reward;
 	$newItem->location1     = $location1;
@@ -117,7 +158,8 @@ function createChallenge($challenger, $adminApproved, $name,
 	$newItem->closingTime   = $closingTime;
 	$newItem->minAttendees  = $minAttendees;
 	$newItem->maxAttendees  = $maxAttendees;
-	
+	$newItem->attendees  = $attendees;
+		
 	$_challenges = json_decode($GLOBALS['challenges']);
 	array_push($_challenges, $newItem);
 	$GLOBALS['challenges'] = json_encode($_challenges);
@@ -126,9 +168,9 @@ function createChallenge($challenger, $adminApproved, $name,
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $description, $reward,
+						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -140,6 +182,8 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->adminApproved = $adminApproved;
 			if ($name != null)
 				$thing->name = $name;
+			if ($skills != null)
+				$thing->skills = $skills;
 			if ($description != null)
 				$thing->description = $description;
 			if ($reward != null)
@@ -158,6 +202,42 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 				$thing->maxAttendees = $maxAttendees;
 			
 			$returnable = $thing;
+		}
+	}
+	
+	$GLOBALS['challenges'] = json_encode($_challenges);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode($returnable);
+}
+
+function pushChallenge($id, $skills, $attendees) {
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	$returnable = false;
+	foreach($_challenges as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills = array_unique(array_merge($person->skills, $skills));
+			$person->attendees = array_unique(array_merge($person->attendees, $attendees));
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['challenges'] = json_encode($_challenges);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode($returnable);
+}
+
+function popChallenge($id, $skills, $attendees) {
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	$returnable = false;
+	foreach($_challenges as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills = array_values(array_diff($person->skills, $skills));
+			$person->attendees = array_values(array_diff($person->attendees, $attendees));
+			
+			$returnable = $person;
 		}
 	}
 	

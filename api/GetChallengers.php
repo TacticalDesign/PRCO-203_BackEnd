@@ -6,20 +6,24 @@ $return = "false";
 
 $challengers = file_get_contents(challengerFile);
 
-//To delete a user at a given ID
+//To delete a challenger at a given ID
 if (!empty($_GET['delete'])) {
 	$return = deleteUser($_GET['delete']);
 }
 
-//To create a new user when no ID is given
-if (empty($_GET['edit']) && (
+//To create a new challenger when no ID is given
+if (empty($_GET['edit']) &&
+	empty($_GET['push']) && 
+	empty($_GET['pop']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['name'])
 		|| !empty($_GET['colour'])
 		|| !empty($_GET['contactEmail'])
 		|| !empty($_GET['contactPhone'])
-		|| !empty($_GET['about']))) {
+		|| !empty($_GET['about'])
+		|| !empty($_GET['currentChallenges'])
+		|| !empty($_GET['archivedChallenges']))) {
 	$return = createUser(
 			!empty($_GET['email'])              ? $_GET['email'] : null,
 			!empty($_GET['password'])           ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
@@ -27,17 +31,24 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null);
+			!empty($_GET['about'])              ? $_GET['about'] : null,
+		    !empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
+		    !empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+}
 
 //To edit an existing challenger at a given ID
-} elseif (!empty($_GET['edit']) && (
-		   !empty($_GET['email'])
-		|| !empty($_GET['password'])
-		|| !empty($_GET['name'])
-		|| !empty($_GET['colour'])
-		|| !empty($_GET['contactEmail'])
-		|| !empty($_GET['contactPhone'])
-		|| !empty($_GET['about']))) {
+else if (!empty($_GET['edit']) &&
+		 empty($_GET['push']) && 
+		 empty($_GET['pop']) && (
+			   !empty($_GET['email'])
+			|| !empty($_GET['password'])
+			|| !empty($_GET['name'])
+			|| !empty($_GET['colour'])
+			|| !empty($_GET['contactEmail'])
+			|| !empty($_GET['contactPhone'])
+			|| !empty($_GET['about'])
+			|| !empty($_GET['currentChallenges'])
+			|| !empty($_GET['archivedChallenges']))) {
 	$return = editUser(
 			$_GET['edit'],
 			!empty($_GET['email'])              ? $_GET['email'] : null,
@@ -46,7 +57,33 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['colour'])             ? $_GET['colour'] : null,
 			!empty($_GET['contactEmail'])       ? $_GET['contactEmail'] : null,
 			!empty($_GET['contactPhone'])       ? $_GET['contactPhone'] : null,
-			!empty($_GET['about'])              ? $_GET['about'] : null);
+			!empty($_GET['about'])              ? $_GET['about'] : null,
+			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : null,
+			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : null);
+}
+			
+//To push values to a young person's array contents
+else if ( empty($_GET['edit']) &&
+		 !empty($_GET['push']) && 
+		  empty($_GET['pop']) &&(
+			   !empty($_GET['currentChallenges'])
+			|| !empty($_GET['archivedChallenges']))) {
+	$return = pushUser(
+			$_GET['push'],
+			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
+			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
+}
+
+//To pop values from a young person's array contents
+else if ( empty($_GET['edit']) &&
+		  empty($_GET['push']) && 
+		 !empty($_GET['pop']) &&(
+			   !empty($_GET['currentChallenges'])
+			|| !empty($_GET['archivedChallenges']))) {
+	$return = popUser(
+			$_GET['pop'],
+			!empty($_GET['currentChallenges'])  ? $_GET['currentChallenges'] : array(),
+			!empty($_GET['archivedChallenges']) ? $_GET['archivedChallenges'] : array());
 }
 
 //To return only specific challengers at given IDs
@@ -66,6 +103,9 @@ else if (!empty($_GET['search'])) {
 if (!empty($return))
 	echo $return;
 
+//Functions
+//=========
+
 function deleteUser($id) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
@@ -84,7 +124,8 @@ function deleteUser($id) {
 }
 
 function createUser($email, $password, $name, $colour,
-					$contactEmail, $contactPhone, $about) {
+					$contactEmail, $contactPhone, $about,
+					$currentChallenges, $archivedChallenges) {
 	$newItem = new stdClass();
 	$newItem->id                 = date("zyHis");
 	$newItem->email              = $email;
@@ -96,8 +137,8 @@ function createUser($email, $password, $name, $colour,
 	$newItem->contactEmail       = $contactEmail;
 	$newItem->contactPhone       = $contactPhone;
 	$newItem->about              = $about;
-	$newItem->currentChallenges  = array();
-	$newItem->archivedChallenges = array();
+	$newItem->currentChallenges  = $currentChallenges;
+	$newItem->archivedChallenges = $archivedChallenges;
 	
 	$_challengers = json_decode($GLOBALS['challengers']);
 	array_push($_challengers, $newItem);
@@ -106,9 +147,9 @@ function createUser($email, $password, $name, $colour,
 	return $GLOBALS['challengers'];
 }
 
-function editUser($id, $email, $password, $name,
-					$colour, $contactEmail, $contactPhone,
-					$about) {
+function editUser($id, $email, $password, $name, $colour,
+					$contactEmail, $contactPhone, $about,
+					$currentChallenges, $archivedChallenges) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -128,6 +169,46 @@ function editUser($id, $email, $password, $name,
 				$person->contactPhone = $contactPhone;
 			if ($about != null)
 				$person->about = $about;
+			if ($currentChallenges != null)
+				$person->currentChallenges = $currentChallenges;
+			if ($archivedChallenges != null)
+				$person->archivedChallenges = $archivedChallenges;
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['challengers'] = json_encode($_challengers);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
+	return json_encode($returnable);
+}
+
+function pushUser($id, $currentChallenges, $archivedChallenges) {
+	$_challengers = json_decode($GLOBALS['challengers']);
+	
+	$returnable = false;
+	foreach($_challengers as $i => $person) {
+		if ($person->id == $id) {
+			$person->currentChallenges = array_unique(array_merge($person->currentChallenges, $currentChallenges));
+			$person->archivedChallenges = array_unique(array_merge($person->archivedChallenges, $archivedChallenges));
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['challengers'] = json_encode($_challengers);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
+	return json_encode($returnable);
+}
+
+function popUser($id, $currentChallenges, $archivedChallenges) {
+	$_challengers = json_decode($GLOBALS['challengers']);
+	
+	$returnable = false;
+	foreach($_challengers as $i => $person) {
+		if ($person->id == $id) {
+			$person->currentChallenges = array_values(array_diff($person->currentChallenges, $currentChallenges));
+			$person->archivedChallenges = array_values(array_diff($person->archivedChallenges, $archivedChallenges));
 			
 			$returnable = $person;
 		}
@@ -150,7 +231,6 @@ function findUsers($ids, $where) {
 	} else if ($ids == "all") {
 		return $GLOBALS['challengers'];
 	}
-	
 	
 	$wantedIDs = explode(',', $ids);
 	$wantedUsers = [];

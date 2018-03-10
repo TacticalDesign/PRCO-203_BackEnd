@@ -6,13 +6,15 @@ $return = "false";
 
 $admins = file_get_contents(adminFile);
 
-//To delete a user at a given ID
+//To delete an admin at a given ID
 if (!empty($_GET['delete'])) {
 	$return = deleteUser($_GET['delete']);
 }
 
-//To create a new user when no ID is given
-if (empty($_GET['edit']) && (
+//To create a new admin when no ID is given
+if (empty($_GET['edit']) &&
+	empty($_GET['push']) && 
+	empty($_GET['pop']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
@@ -22,9 +24,10 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['password'])  ? password_hash($_GET['password'], PASSWORD_BCRYPT) : null,
 			!empty($_GET['firstName']) ? $_GET['firstName'] : null,
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
+}
 
-//To edit an existing challenge at a given ID
-} elseif (!empty($_GET['edit']) && (
+//To edit an existing admin at a given ID
+else if (!empty($_GET['edit']) && (
 		   !empty($_GET['email'])
 		|| !empty($_GET['password'])
 		|| !empty($_GET['firstName'])
@@ -37,7 +40,7 @@ if (empty($_GET['edit']) && (
 			!empty($_GET['surname'])   ? $_GET['surname'] : null);
 }
 
-//To return only specific users at given IDs
+//To return only specific admins at given IDs
 else if (!empty($_GET['find'])) {
 	$return = findUsers($_GET['find'],
 			!empty($_GET['where']) ? $_GET['where'] : null);
