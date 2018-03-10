@@ -127,25 +127,25 @@ function deleteUser($id) {
 function createUser($email, $password, $name, $colour,
 					$contactEmail, $contactPhone, $about,
 					$currentChallenges, $archivedChallenges) {
-	$newItem = new stdClass();
-	$newItem->id                 = date("zyHis");
-	$newItem->email              = $email;
-	$newItem->password           = $password;
-	$newItem->name               = $name;
-	$newItem->image              = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->cover              = coverPhotoFolder . "/" . $newItem->id . ".png";
-	$newItem->colour             = $colour;
-	$newItem->contactEmail       = $contactEmail;
-	$newItem->contactPhone       = $contactPhone;
-	$newItem->about              = $about;
-	$newItem->currentChallenges  = $currentChallenges;
-	$newItem->archivedChallenges = $archivedChallenges;
+	$returnable = new stdClass();
+	$returnable->id                 = date("zyHis");
+	$returnable->email              = $email;
+	$returnable->password           = $password;
+	$returnable->name               = $name;
+	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->cover              = coverPhotoFolder . "/" . $returnable->id . ".png";
+	$returnable->colour             = $colour;
+	$returnable->contactEmail       = $contactEmail;
+	$returnable->contactPhone       = $contactPhone;
+	$returnable->about              = $about;
+	$returnable->currentChallenges  = $currentChallenges;
+	$returnable->archivedChallenges = $archivedChallenges;
 	
 	$_challengers = json_decode($GLOBALS['challengers']);
-	array_push($_challengers, $newItem);
+	array_push($_challengers, $returnable);
 	$GLOBALS['challengers'] = json_encode($_challengers);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return $GLOBALS['challengers'];
+	return json_encode($returnable);
 }
 
 function editUser($id, $email, $password, $name, $colour,

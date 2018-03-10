@@ -126,46 +126,48 @@ if (!empty($return))
 function deleteChallenge($id) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
-	$success = false;
+	$returnable = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
 			unset($_challenges[$i]);
 			$_challenges = array_values($_challenges);
-			$success = $thing;
+			$returnable = $thing;
 		}
 	}
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode($success);
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function createChallenge($challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
-	$newItem = new stdClass();
-	$newItem->id            = date("zyHis");
-	$newItem->challenger    = $challenger;
-	$newItem->adminApproved = $adminApproved;
-	$newItem->name          = $name;
-	$newItem->image         = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->skills        = $skills;
-	$newItem->description   = $description;
-	$newItem->reward        = $reward;
-	$newItem->location1     = $location1;
-	$newItem->location2     = $location2;
-	$newItem->location3     = $location3;
-	$newItem->closingTime   = $closingTime;
-	$newItem->minAttendees  = $minAttendees;
-	$newItem->maxAttendees  = $maxAttendees;
-	$newItem->attendees  = $attendees;
+	$returnable = new stdClass();
+	$returnable->id            = date("zyHis");
+	$returnable->challenger    = $challenger;
+	$returnable->adminApproved = $adminApproved;
+	$returnable->name          = $name;
+	$returnable->image         = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->skills        = $skills;
+	$returnable->description   = $description;
+	$returnable->reward        = $reward;
+	$returnable->location1     = $location1;
+	$returnable->location2     = $location2;
+	$returnable->location3     = $location3;
+	$returnable->closingTime   = $closingTime;
+	$returnable->minAttendees  = $minAttendees;
+	$returnable->maxAttendees  = $maxAttendees;
+	$returnable->attendees  = $attendees;
 		
 	$_challenges = json_decode($GLOBALS['challenges']);
-	array_push($_challenges, $newItem);
+	array_push($_challenges, $returnable);
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return $GLOBALS['challenges'];
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function editChallenge($id, $challenger, $adminApproved, $name,
@@ -208,6 +210,7 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -226,6 +229,7 @@ function pushChallenge($id, $skills, $attendees) {
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -244,6 +248,7 @@ function popChallenge($id, $skills, $attendees) {
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -257,10 +262,7 @@ function findChallenges($ids, $where) {
 				$params[$iii] = explode(':', $params[$iii], 2);
 			}
 		}
-	} else if ($ids == "all") {
-		return $GLOBALS['challenges'];
-	}
-	
+	}	
 	
 	$wantedIDs = explode(',', $ids);
 	$wantedItems = [];
@@ -285,8 +287,10 @@ function findChallenges($ids, $where) {
 		if ($skip)
 			continue;
 		
-		if ($ids == "all" || in_array($challenge->id, $wantedIDs))
+		if ($ids == "all" || in_array($challenge->id, $wantedIDs)) {
+			unset($challenge->password);
 			array_push($wantedItems, $challenge);
+		}
 	}
 	
 	return json_encode($wantedItems);
@@ -342,6 +346,7 @@ function searchChallenges($searchPhrase, $where) {
 							  || strpos(strtolower($challenge->location2), $term) !== false
 							  || strpos(strtolower($challenge->location3), $term) !== false)
 							  && !in_array($challenge->id, $matchedIDs)) {
+					unset($challenge->password);
 					array_push($matches, $challenge);
 					array_push($matchedIDs, $challenge->id);
 				}

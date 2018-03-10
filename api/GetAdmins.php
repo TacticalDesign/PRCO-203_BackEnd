@@ -60,35 +60,37 @@ if (!empty($return))
 function deleteUser($id) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
-	$success = false;
+	$returnable = false;
 	foreach($_admins as $i => $person) {
 		if ($person->id == $id) {
 			unset($_admins[$i]);
 			$_admins = array_values($_admins);
-			$success = $person;
+			$returnable = $person;
 		}
 	}
 	
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode($success);
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function createUser($email, $password, $firstName,
 						 $surname) {
-	$newItem = new stdClass();
-	$newItem->id        = date("zyHis");
-	$newItem->email     = $email;
-	$newItem->password  = $password;
-	$newItem->firstName = $firstName;
-	$newItem->surname   = $surname;
-	$newItem->image     = profileFolder . "/" . $newItem->id . ".png";
+	$returnable = new stdClass();
+	$returnable->id        = date("zyHis");
+	$returnable->email     = $email;
+	$returnable->password  = $password;
+	$returnable->firstName = $firstName;
+	$returnable->surname   = $surname;
+	$returnable->image     = profileFolder . "/" . $returnable->id . ".png";
 	
 	$_admins = json_decode($GLOBALS['admins']);
-	array_push($_admins, $newItem);
+	array_push($_admins, $returnable);
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return $GLOBALS['admins'];
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function editUser($id, $email, $password,
@@ -113,6 +115,7 @@ function editUser($id, $email, $password,
 	
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -126,10 +129,7 @@ function findUsers($ids, $where) {
 				$params[$iii] = explode(':', $params[$iii], 2);
 			}
 		}
-	} else if ($ids == "all") {
-		return $GLOBALS['admins'];
 	}
-	
 	
 	$wantedIDs = explode(',', $ids);
 	$wantedUsers = [];
@@ -154,8 +154,10 @@ function findUsers($ids, $where) {
 		if ($skip)
 			continue;
 		
-		if ($ids == "all" || in_array($person->id, $wantedIDs))
+		if ($ids == "all" || in_array($person->id, $wantedIDs)) {
+			unset($person->password);
 			array_push($wantedUsers, $person);
+		}
 	}
 	
 	return json_encode($wantedUsers);
@@ -206,6 +208,7 @@ function searchUsers($searchPhrase, $where) {
 				if ((strpos(strtolower($person->firstName), $term) !== false
 							  || strpos(strtolower($person->surname), $term) !== false)
 							  && !in_array($person->id, $matchedIDs)) {
+					unset($person->password);
 					array_push($matches, $person);
 					array_push($matchedIDs, $person->id);
 				}

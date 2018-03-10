@@ -114,40 +114,42 @@ if (!empty($return))
 function deleteUser($id) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
-	$success = false;
+	$returnable = false;
 	foreach($_youngPeople as $i => $person) {
 		if ($person->id == $id) {
 			unset($_youngPeople[$i]);
 			$_youngPeople = array_values($_youngPeople);
-			$success = $person;
+			$returnable = $person;
 		}
 	}
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode($success);
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function createUser($email, $password, $firstName,
 					$surname, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
-	$newItem = new stdClass();
-	$newItem->id                 = date("zyHis");
-	$newItem->email              = $email;
-	$newItem->password           = $password;
-	$newItem->firstName          = $firstName;
-	$newItem->surname            = $surname;
-	$newItem->image              = profileFolder . "/" . $newItem->id . ".png";
-	$newItem->skills             = $skills;
-	$newItem->interests          = $interests;
-	$newItem->currentChallenges  = $currentChallenges;
-	$newItem->archivedChallenges = $archivedChallenges;
+	$returnable = new stdClass();
+	$returnable->id                 = date("zyHis");
+	$returnable->email              = $email;
+	$returnable->password           = $password;
+	$returnable->firstName          = $firstName;
+	$returnable->surname            = $surname;
+	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->skills             = $skills;
+	$returnable->interests          = $interests;
+	$returnable->currentChallenges  = $currentChallenges;
+	$returnable->archivedChallenges = $archivedChallenges;
 	
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	array_push($_youngPeople, $newItem);
+	array_push($_youngPeople, $returnable);
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return $GLOBALS['youngPeople'];
+	unset($returnable->password);
+	return json_encode($returnable);
 }
 
 function editUser($id, $email, $password, $firstName,
@@ -181,6 +183,7 @@ function editUser($id, $email, $password, $firstName,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -202,6 +205,7 @@ function pushUser($id, $skills, $interests,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -223,6 +227,7 @@ function popUser($id, $skills, $interests,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	unset($returnable->password);
 	return json_encode($returnable);
 }
 
@@ -236,8 +241,6 @@ function findUsers($ids, $where) {
 				$params[$iii] = explode(':', $params[$iii], 2);
 			}
 		}
-	} else if ($ids == "all") {
-		return $GLOBALS['youngPeople'];
 	}
 	
 	$wantedIDs = explode(',', $ids);
@@ -263,8 +266,10 @@ function findUsers($ids, $where) {
 		if ($skip)
 			continue;
 		
-		if ($ids == "all" || in_array($person->id, $wantedIDs))
+		if ($ids == "all" || in_array($person->id, $wantedIDs)) {
+			unset($person->password);
 			array_push($wantedUsers, $person);
+		}
 	}
 	
 	return json_encode($wantedUsers);
@@ -317,6 +322,7 @@ function searchUsers($searchPhrase, $where) {
 							  || strpos(strtolower(implode("|", $person->skills)), $term) !== false
 							  || strpos(strtolower(implode("|", $person->interests)), $term) !== false)
 							  && !in_array($person->id, $matchedIDs)) {
+					unset($person->password);
 					array_push($matches, $person);
 					array_push($matchedIDs, $person->id);
 				}
