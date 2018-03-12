@@ -9,9 +9,7 @@ $return = "false";
 $challengers = file_get_contents(challengerFile);
 
 //To create a new challenger with a given email
-if (onlyKeyword('new', $keywords) &&
-	atLeastOne(array('password', 'name', 'colour', 'contactEmail', 'contactPhone',
-					 'about', 'currentChallenges', 'archivedChallenges'))) {
+if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
 		getString('new'),
 		getEncrypted('password'),
@@ -100,7 +98,7 @@ function deleteUser($ids) {
 	$keeps = array();
 	$returnable = array();
 	foreach($_challengers as $i => $person) {
-		if (in_array($person->id, $wantedIDs) {
+		if (in_array($person->id, $wantedIDs)) {
 			unset($person->password);
 			array_push($returnable, $person);
 		} else 

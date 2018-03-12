@@ -3,7 +3,7 @@
 include("Locations.php");
 include("Tools.php");
 
-$keywords = array('new', 'edit', 'delete', 'find', 'search', 'test');
+$keywords = array('new', 'edit', 'delete', 'find', 'search');
 $return = "false";
 
 $admins = file_get_contents(adminFile);

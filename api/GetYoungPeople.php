@@ -103,7 +103,7 @@ function deleteUser($ids) {
 	$returnable = array();
 	foreach($_youngPeople as $i => $person) {
 		if (in_array($person->id, $wantedIDs)) {
-			unset($person->password);
+			//unset($person->password);
 			array_push($returnable, $person);
 		} else 
 			array_push($keeps, $person);
