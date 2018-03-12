@@ -15,6 +15,7 @@ if (onlyKeyword('new', $keywords)) {
 		getEncrypted('password'),
 		getVar('firstName'),
 		getVar('surname'),
+		getInt('balance'),
 		getArray('skills'),
 		getArray('interests'),
 		getArray('currentChallenges'),
@@ -24,7 +25,7 @@ if (onlyKeyword('new', $keywords)) {
 
 //To edit an existing young person at a given ID
 else if (onlyKeyword('edit', $keywords) && 
-		 atLeastOne(array('email', 'password', 'firstName', 'surname', 'skills',
+		 atLeastOne(array('email', 'password', 'firstName', 'surname', 'balance', 'skills',
 				     'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
 		getVar('edit'),
@@ -32,6 +33,7 @@ else if (onlyKeyword('edit', $keywords) &&
 		getEncrypted('password'),
 		getVar('firstName'),
 		getVar('surname'),
+		getInt('balance'),
 		getArray('skills'),
 		getArray('interests'),
 		getArray('currentChallenges'),
@@ -113,7 +115,7 @@ function deleteUser($ids) {
 }
 
 function createUser($email, $password, $firstName,
-					$surname, $skills, $interests,
+					$surname, $balance, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
@@ -121,6 +123,7 @@ function createUser($email, $password, $firstName,
 	$returnable->password           = $password;
 	$returnable->firstName          = $firstName;
 	$returnable->surname            = $surname;
+	$returnable->balance			= $balance;
 	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
 	$returnable->skills             = $skills;
 	$returnable->interests          = $interests;
@@ -137,6 +140,7 @@ function createUser($email, $password, $firstName,
 
 function editUser($id, $email, $password, $firstName,
 					$surname, $skills, $interests,
+					$surname, $balance, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
@@ -151,6 +155,8 @@ function editUser($id, $email, $password, $firstName,
 				$person->firstName = $firstName;
 			if ($surname != null)
 				$person->surname = $surname;
+			if ($balance != null)
+				$person->balance = $balance;
 			if ($skills != null)
 				$person->skills = $skills;
 			if ($interests != null)
