@@ -13,13 +13,13 @@ if (onlyKeyword('new', $keywords) &&
 	atLeastOne(array('password', 'name', 'colour', 'contactEmail', 'contactPhone',
 					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = createUser(
-		getVar('new'),
+		getString('new'),
 		getEncrypted('password'),
-		getVar('name'),
-		getVar('colour'),
-		getVar('contactEmail'),
-		getVar('contactPhone'),
-		getVar('about'),
+		getString('name'),
+		getString('colour'),
+		getString('contactEmail'),
+		getString('contactPhone'),
+		getString('about'),
 		getArray('currentChallenges'),
 		getArray('archivedChallenges')
 	);
@@ -30,14 +30,14 @@ else if (onlyKeyword('edit', $keywords) &&
 		 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
 					 'about', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
-		getVar('edit'),
-		getVar('email'),
+		getString('edit'),
+		getString('email'),
 		getEncrypted('password'),
-		getVar('name'),
-		getVar('colour'),
-		getVar('contactEmail'),
-		getVar('contactPhone'),
-		getVar('about'),
+		getString('name'),
+		getString('colour'),
+		getString('contactEmail'),
+		getString('contactPhone'),
+		getString('about'),
 		getArray('currentChallenges'),
 		getArray('archivedChallenges')
 	);
@@ -47,7 +47,7 @@ else if (onlyKeyword('edit', $keywords) &&
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = pushUser(
-		getVar('push'),
+		getString('push'),
 		getArray('currentChallenges'),
 		getArray('archivedChallenges')
 	);
@@ -57,7 +57,7 @@ else if (onlyKeyword('push', $keywords) &&
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
 	$return = popUser(
-		getVar('pop'),
+		getString('pop'),
 		getArray('currentChallenges'),
 		getArray('archivedChallenges')
 	);
@@ -66,23 +66,23 @@ else if (onlyKeyword('pop', $keywords) &&
 //To delete a challenger with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteUser(
-		getVar('delete')
+		getString('delete')
 	);
 }
 
 //To return only specific challengers with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-		getVar('find'),
-		getVar('where')
+		getString('find'),
+		getString('where')
 	);
 }
 
 //To search for challengers with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-		getVar('search'),
-		getVar('where')
+		getString('search'),
+		getString('where')
 	);
 }
 

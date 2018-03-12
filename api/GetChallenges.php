@@ -9,46 +9,43 @@ $return = "false";
 $challenges = file_get_contents(currentChallengesFile);
 
 //To create a new challenge with a given name
-if (onlyKeyword('new', $keywords) &&
-	atLeastOne(array('challenger', 'adminApproved', 'name', 'skills', 'description', 'reward'
-					 'location1', 'location2', 'location3', 'closingTime', 'minAttendees',
-					 'maxAttendees', 'attendees'))) {
+if (onlyKeyword('new', $keywords)) {
 	$return = createChallenge(
-		getVar('challenger'),
-		getVar('adminApproved'),
-		getVar('new'),
+		getString('challenger'),
+		getString('adminApproved'),
+		getString('new'),
 		getArray('skills'),
-		getVar('description'),
-		getVar('reward'),
-		getVar('location1'),
-		getVar('location2'),
-		getVar('location3'),
-		getVar('closingTime'),
-		getVar('minAttendees'),
-		getVar('maxAttendees'),
+		getString('description'),
+		getInt('reward'),
+		getString('location1'),
+		getString('location2'),
+		getString('location3'),
+		getString('closingTime'),
+		getString('minAttendees'),
+		getString('maxAttendees'),
 		getArray('attendees')
 	);
 }
 
 //To edit an existing challenge with a given ID
 else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('challenger', 'adminApproved', 'name', 'skills', 'description', 'reward'
+		 atLeastOne(array('challenger', 'adminApproved', 'name', 'skills', 'description', 'reward',
 					      'location1', 'location2', 'location3', 'closingTime', 'minAttendees',
 					      'maxAttendees', 'attendees'))) {
 	$return = editChallenge(
-		getVar('edit'),
-		getVar('challenger'),
-		getVar('adminApproved'),
-		getVar('name'),
+		getString('edit'),
+		getString('challenger'),
+		getString('adminApproved'),
+		getString('name'),
 		getArray('skills'),
-		getVar('description'),
-		getVar('reward'),
-		getVar('location1'),
-		getVar('location2'),
-		getVar('location3'),
-		getVar('closingTime'),
-		getVar('minAttendees'),
-		getVar('maxAttendees'),
+		getString('description'),
+		getInt('reward'),
+		getString('location1'),
+		getString('location2'),
+		getString('location3'),
+		getString('closingTime'),
+		getString('minAttendees'),
+		getString('maxAttendees'),
 		getArray('attendees')
 	);
 }
@@ -57,7 +54,7 @@ else if (onlyKeyword('edit', $keywords) &&
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('skills', 'attendees'))) {
 	$return = pushChallenge(
-		getVar('push'),
+		getString('push'),
 		getArray('skills'),
 		getArray('attendees')
 	);
@@ -67,7 +64,7 @@ else if (onlyKeyword('push', $keywords) &&
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('skills', 'attendees'))) {
 	$return = popChallenge(
-		getVar('pop'),
+		getString('pop'),
 		getArray('skills'),
 		getArray('attendees')
 	);
@@ -76,23 +73,23 @@ else if (onlyKeyword('pop', $keywords) &&
 //To delete a challenge with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteChallenge(
-		getVar('delete')
+		getString('delete')
 	);
 }
 
 //To return only specific challenges with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findChallenges(
-		getVar('find'),
-		getVar('where')
+		getString('find'),
+		getString('where')
 	);
 }
 
 //To search for challenges with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchChallenges(
-		getVar('search'),
-		getVar('where')
+		getString('search'),
+		getString('where')
 	);
 }
 

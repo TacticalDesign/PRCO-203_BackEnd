@@ -25,7 +25,7 @@ function getArray($array) {
 		return array($_GET[$array]);
 }
 
-function getVar($var) {
+function getString($var) {
 	if (empty($_GET[$var]))
 		return null;
 	else if (is_array($_GET[$var]))
@@ -41,6 +41,15 @@ function getEncrypted($var) {
 		return password_hash(array_values($_GET[$var])[0], PASSWORD_BCRYPT);
 	else
 		return password_hash($_GET[$var], PASSWORD_BCRYPT);
+}
+
+function getInt($var) {
+	if (empty($_GET[$var]))
+		return null;
+	else if (is_array($_GET[$var]))
+		return (int)(array_values($_GET[$var])[0]);
+	else
+		return (int)$_GET[$var];
 }
 
 ?>

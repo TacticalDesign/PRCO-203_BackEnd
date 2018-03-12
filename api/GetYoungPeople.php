@@ -11,10 +11,10 @@ $youngPeople = file_get_contents(youngPeopleFile);
 //To create a new young person with a given email
 if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
-		getVar('new'),
+		getString('new'),
 		getEncrypted('password'),
-		getVar('firstName'),
-		getVar('surname'),
+		getString('firstName'),
+		getString('surname'),
 		getInt('balance'),
 		getArray('skills'),
 		getArray('interests'),
@@ -28,11 +28,11 @@ else if (onlyKeyword('edit', $keywords) &&
 		 atLeastOne(array('email', 'password', 'firstName', 'surname', 'balance', 'skills',
 				     'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = editUser(
-		getVar('edit'),
-		getVar('email'),
+		getString('edit'),
+		getString('email'),
 		getEncrypted('password'),
-		getVar('firstName'),
-		getVar('surname'),
+		getString('firstName'),
+		getString('surname'),
 		getInt('balance'),
 		getArray('skills'),
 		getArray('interests'),
@@ -45,7 +45,7 @@ else if (onlyKeyword('edit', $keywords) &&
 else if (onlyKeyword('push', $keywords) &&
 		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = pushUser(
-		getVar('push'),
+		getString('push'),
 		getArray('skills'),
 		getArray('interests'),
 		getArray('currentChallenges'),
@@ -57,7 +57,7 @@ else if (onlyKeyword('push', $keywords) &&
 else if (onlyKeyword('pop', $keywords) &&
 		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
 	$return = popUser(
-		getVar('pop'),
+		getString('pop'),
 		getArray('skills'),
 		getArray('interests'),
 		getArray('currentChallenges'),
@@ -68,23 +68,23 @@ else if (onlyKeyword('pop', $keywords) &&
 //To delete a young person with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteUser(
-		getVar('delete')
+		getString('delete')
 	);
 }
 
 //To return only specific young people with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-		getVar('find'),
-		getVar('where')
+		getString('find'),
+		getString('where')
 	);
 }
 
 //To search all young people for a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-		getVar('search'),
-		getVar('where')
+		getString('search'),
+		getString('where')
 	);
 }
 
@@ -139,7 +139,6 @@ function createUser($email, $password, $firstName,
 }
 
 function editUser($id, $email, $password, $firstName,
-					$surname, $skills, $interests,
 					$surname, $balance, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);

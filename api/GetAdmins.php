@@ -3,19 +3,18 @@
 include("Locations.php");
 include("Tools.php");
 
-$keywords = array('new', 'edit', 'delete', 'find', 'search');
+$keywords = array('new', 'edit', 'delete', 'find', 'search', 'test');
 $return = "false";
 
 $admins = file_get_contents(adminFile);
 
 //To create a new admin with a given email
-if (onlyKeyword('new', $keywords) &&
-	atLeastOne(array('password', 'firstName', 'surname'))) {
+if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
-		getVar('new'),
+		getString('new'),
 		getEncrypted('password'),
-		getVar('firstName'),
-		getVar('surname')
+		getString('firstName'),
+		getString('surname')
 	);
 }
 
@@ -23,34 +22,34 @@ if (onlyKeyword('new', $keywords) &&
 else if (onlyKeyword('edit', $keywords) &&
 		 atLeastOne(array('email', 'password', 'firstName', 'surname'))) {
 	$return = editUser(
-		getVar('edit'),
-		getVar('email'),
+		getString('edit'),
+		getString('email'),
 		getEncrypted('password'),
-		getVar('firstName'),
-		getVar('surname')
+		getString('firstName'),
+		getString('surname')
 	);
 }
 
 //To delete an admin with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteUser(
-		getVar('delete')
+		getString('delete')
 	);
 }
 
 //To find only specific admins with given IDs
 else if (onlyKeyword('find', $keywords)) {
 	$return = findUsers(
-		getVar('find'),
-		getVar('where')
+		getString('find'),
+		getString('where')
 	);
 }
 
 //To search for admins with a query
 else if (onlyKeyword('search', $keywords)) {
 	$return = searchUsers(
-		getVar('search'),
-		getVar('where')
+		getString('search'),
+		getString('where')
 	);
 }
 
@@ -221,7 +220,6 @@ function searchUsers($searchPhrase, $where) {
 	
 	return json_encode($matches);
 }
-
 
 
 
