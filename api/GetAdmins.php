@@ -53,6 +53,10 @@ else if (onlyKeyword('search', $keywords)) {
 	);
 }
 
+else if (onlyKeyword('test', array('test'))) {
+	$return = json_encode(array('thing' => getBool('test')));
+}
+
 //Return a value if needed
 if (!empty($return))
 	echo $return;

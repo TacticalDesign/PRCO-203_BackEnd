@@ -52,4 +52,14 @@ function getInt($var) {
 		return (int)$_GET[$var];
 }
 
+function getBool($var) {
+	$falsey = array('', '0', 'false', 'False', 'FALSE');
+	if (empty($_GET[$var]))
+		return null;
+	else if (is_array($_GET[$var]))
+		return !in_array(array_values($_GET[$var])[0], $falsey);
+	else
+		return !in_array($_GET[$var], $falsey);
+}
+
 ?>
