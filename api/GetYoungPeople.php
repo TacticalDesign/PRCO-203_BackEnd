@@ -1,109 +1,123 @@
 <?php
 
-include("Locations.php");
-include("Tools.php");
-
-$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'delete', 'find', 'search');
-$return = "false";
+include_once("Locations.php");
+include_once("Tools.php");
+include_once("GetChallenges.php");
 
 $youngPeople = file_get_contents(youngPeopleFile);
 
-//To create a new young person with a given email
-if (onlyKeyword('new', $keywords)) {
-	$return = createUser(
-		getBool('frozen'),
-		getString('new'),
-		getEncrypted('password'),
-		getString('firstName'),
-		getString('surname'),
-		getInt('balance'),
-		getArray('skills'),
-		getArray('interests'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) {
+	$return = "false";
+	$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'attend', 'delete', 'find', 'search');
+	
+	//To create a new young person with a given email
+	if (onlyKeyword('new', $keywords)) {
+		$return = createUser(
+			getBool('frozen'),
+			getString('new'),
+			getEncrypted('password'),
+			getString('firstName'),
+			getString('surname'),
+			getInt('balance'),
+			getArray('skills'),
+			getArray('interests'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To edit an existing young person at a given ID
-else if (onlyKeyword('edit', $keywords) && 
-		 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname',
-						  'balance', 'skills', 'interests', 'currentChallenges',
-						  'archivedChallenges'))) {
-	$return = editUser(
-		getString('edit'),
-		getBool('frozen'),
-		getString('email'),
-		getEncrypted('password'),
-		getString('firstName'),
-		getString('surname'),
-		getInt('balance'),
-		getArray('skills'),
-		getArray('interests'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
-			
-//To push values to a young person's array contents
-else if (onlyKeyword('push', $keywords) &&
-		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-	$return = pushUser(
-		getString('push'),
-		getArray('skills'),
-		getArray('interests'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+	//To edit an existing young person at a given ID
+	else if (onlyKeyword('edit', $keywords) && 
+			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname',
+							  'balance', 'skills', 'interests', 'currentChallenges',
+							  'archivedChallenges'))) {
+		$return = editUser(
+			getString('edit'),
+			getBool('frozen'),
+			getString('email'),
+			getEncrypted('password'),
+			getString('firstName'),
+			getString('surname'),
+			getInt('balance'),
+			getArray('skills'),
+			getArray('interests'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
+				
+	//To push values to a young person's array contents
+	else if (onlyKeyword('push', $keywords) &&
+			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
+		$return = pushUser(
+			getString('push'),
+			getArray('skills'),
+			getArray('interests'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To pop values from a young person's array contents
-else if (onlyKeyword('pop', $keywords) &&
-		 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-	$return = popUser(
-		getString('pop'),
-		getArray('skills'),
-		getArray('interests'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+	//To pop values from a young person's array contents
+	else if (onlyKeyword('pop', $keywords) &&
+			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
+		$return = popUser(
+			getString('pop'),
+			getArray('skills'),
+			getArray('interests'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To add a new feedback to a young person with a given ID
-else if (onlyKeyword('feedback', $keywords)) {
-	$return = feedbackUser(
-		getString('feedback'),
-		getString('challenge'),
-		getInt('rating'),
-		getString('comment')
-	);
-}
+	//To add a new feedback to a young person with a given ID
+	else if (onlyKeyword('feedback', $keywords) &&
+			 atLeastAll(array('challenge', 'rating'))) {
+		$return = feedbackUser( 
+			getString('feedback'),
+			getString('challenge'),
+			getInt('rating'),
+			getString('comment')
+		);
+	}
+	
+	//To mark a young person with a given ID as attending a challenge
+	else if (onlyKeyword('attend', $keywords) &&
+			 atLeastAll(array('challenge', 'attending'))) {
+		$return = attendUser(
+			getString('attend'),
+			getString('challenge'),
+			getBool('attending')
+		);
+	}
 
-//To delete a young person with a given ID
-else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(
-		getString('delete')
-	);
-}
+	//To delete a young person with a given ID
+	else if (onlyKeyword('delete', $keywords)) {
+		$return = deleteUser(
+			getString('delete')
+		);
+	}
 
-//To return only specific young people with given IDs
-else if (onlyKeyword('find', $keywords)) {
-	$return = findUsers(
-		getString('find'),
-		getString('where')
-	);
-}
+	//To return only specific young people with given IDs
+	else if (onlyKeyword('find', $keywords)) {
+		$return = findUsers(
+			getString('find'),
+			getString('where')
+		);
+	}
 
-//To search all young people for a query
-else if (onlyKeyword('search', $keywords)) {
-	$return = searchUsers(
-		getString('search'),
-		getString('where')
-	);
-}
+	//To search all young people for a query
+	else if (onlyKeyword('search', $keywords)) {
+		$return = searchUsers(
+			getString('search'),
+			getString('where')
+		);
+	}
 
-//Return a value if needed
-if (!empty($return))
-	echo $return;
+	//Return a value if needed
+	if (!empty($return))
+		echo $return;
+}
 
 //Functions
 //=========
@@ -238,6 +252,18 @@ function feedbackUser($id, $challenge, $rating, $comment) {
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	unset($returnable->password);
 	return json_encode($returnable);
+}
+
+function attendUser($id, $challenge, $attending) {
+	if ($attending) {
+		pushUser($id, array(), array(), array($challenge), array());
+		pushChallenge($challenge, array(), array($id));
+	} else {
+		popUser($id, array(), array(), array($challenge), array());
+		popChallenge($challenge, array(), array($id));
+	}
+	
+	return findUsers($id, null);
 }
 
 function deleteUser($ids) {
