@@ -16,6 +16,14 @@ function atLeastOne($values) {
 	return false;
 }
 
+function atLeastAll($values) {
+	foreach ($values as $i => $value) {
+		if (empty($_GET[$value]))
+			return false;
+	}
+	return true;
+}
+
 function getArray($array) {
 	if (empty($_GET[$array]))
 		return array();
