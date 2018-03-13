@@ -202,9 +202,9 @@ function popUser($id, $skills, $interests,
 	$returnable = false;
 	foreach($_youngPeople as $i => $person) {
 		if ($person->id == $id) {
-			$person->skills    = array_values(array_diff($person->skills, $skills));
-			$person->interests = array_values(array_diff($person->interests, $interests));
-			$person->currentChallenges = array_values(array_diff($person->currentChallenges, $currentChallenges));
+			$person->skills             = array_values(array_diff($person->skills, $skills));
+			$person->interests          = array_values(array_diff($person->interests, $interests));
+			$person->currentChallenges  = array_values(array_diff($person->currentChallenges, $currentChallenges));
 			$person->archivedChallenges = array_values(array_diff($person->archivedChallenges, $archivedChallenges));
 			
 			$returnable = $person;
