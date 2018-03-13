@@ -1,103 +1,106 @@
 <?php
 
-include("Locations.php");
-include("Tools.php");
-
-$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
-$return = "false";
+include_once("Locations.php");
+include_once("Tools.php");
 
 $challenges = file_get_contents(currentChallengesFile);
 
-//To create a new challenge with a given name
-if (onlyKeyword('new', $keywords)) {
-	$return = createChallenge(
-		getBool('frozen'),
-		getString('challenger'),
-		getString('adminApproved'),
-		getString('new'),
-		getArray('skills'),
-		getString('description'),
-		getInt('reward'),
-		getString('location1'),
-		getString('location2'),
-		getString('location3'),
-		getString('closingTime'),
-		getString('minAttendees'),
-		getString('maxAttendees'),
-		getArray('attendees')
-	);
+if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) {
+	$return = "false";
+	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
+
+	//To create a new challenge with a given name
+	if (onlyKeyword('new', $keywords)) {
+		$return = createChallenge(
+			getBool('frozen'),
+			getString('challenger'),
+			getString('adminApproved'),
+			getString('new'),
+			getArray('skills'),
+			getString('description'),
+			getInt('reward'),
+			getString('location1'),
+			getString('location2'),
+			getString('location3'),
+			getString('closingTime'),
+			getString('minAttendees'),
+			getString('maxAttendees'),
+			getArray('attendees')
+		);
+	}
+
+	//To edit an existing challenge with a given ID
+	else if (onlyKeyword('edit', $keywords) &&
+			 atLeastOne(array('frozen', 'challenger', 'adminApproved', 'name', 'skills', 'description',
+							  'reward', 'location1', 'location2', 'location3', 'closingTime',
+							  'minAttendees', 'maxAttendees', 'attendees'))) {
+		$return = editChallenge(
+			getString('edit'),
+			getBool('frozen'),
+			getString('challenger'),
+			getString('adminApproved'),
+			getString('name'),
+			getArray('skills'),
+			getString('description'),
+			getInt('reward'),
+			getString('location1'),
+			getString('location2'),
+			getString('location3'),
+			getString('closingTime'),
+			getString('minAttendees'),
+			getString('maxAttendees'),
+			getArray('attendees')
+		);
+	}
+				
+	//To push values to a challenges array contents
+	else if (onlyKeyword('push', $keywords) &&
+			 atLeastOne(array('skills', 'attendees'))) {
+		$return = pushChallenge(
+			getString('push'),
+			getArray('skills'),
+			getArray('attendees')
+		);
+	}
+
+	//To pop values from a challenges array contents
+	else if (onlyKeyword('pop', $keywords) &&
+			 atLeastOne(array('skills', 'attendees'))) {
+		$return = popChallenge(
+			getString('pop'),
+			getArray('skills'),
+			getArray('attendees')
+		);
+	}
+
+	//To delete a challenge with a given ID
+	else if (onlyKeyword('delete', $keywords)) {
+		$return = deleteChallenge(
+			getString('delete')
+		);
+	}
+
+	//To return only specific challenges with given IDs
+	else if (onlyKeyword('find', $keywords)) {
+		$return = findChallenges(
+			getString('find'),
+			getString('where')
+		);
+	}
+
+	//To search for challenges with a query
+	else if (onlyKeyword('search', $keywords)) {
+		$return = searchChallenges(
+			getString('search'),
+			getString('where')
+		);
+	}
+	
+	//Return a value if needed
+	if (!empty($return))
+		echo $return;
 }
 
-//To edit an existing challenge with a given ID
-else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('frozen', 'challenger', 'adminApproved', 'name', 'skills', 'description',
-						  'reward', 'location1', 'location2', 'location3', 'closingTime',
-						  'minAttendees', 'maxAttendees', 'attendees'))) {
-	$return = editChallenge(
-		getString('edit'),
-		getBool('frozen'),
-		getString('challenger'),
-		getString('adminApproved'),
-		getString('name'),
-		getArray('skills'),
-		getString('description'),
-		getInt('reward'),
-		getString('location1'),
-		getString('location2'),
-		getString('location3'),
-		getString('closingTime'),
-		getString('minAttendees'),
-		getString('maxAttendees'),
-		getArray('attendees')
-	);
-}
-			
-//To push values to a challenges array contents
-else if (onlyKeyword('push', $keywords) &&
-		 atLeastOne(array('skills', 'attendees'))) {
-	$return = pushChallenge(
-		getString('push'),
-		getArray('skills'),
-		getArray('attendees')
-	);
-}
-
-//To pop values from a challenges array contents
-else if (onlyKeyword('pop', $keywords) &&
-		 atLeastOne(array('skills', 'attendees'))) {
-	$return = popChallenge(
-		getString('pop'),
-		getArray('skills'),
-		getArray('attendees')
-	);
-}
-
-//To delete a challenge with a given ID
-else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteChallenge(
-		getString('delete')
-	);
-}
-
-//To return only specific challenges with given IDs
-else if (onlyKeyword('find', $keywords)) {
-	$return = findChallenges(
-		getString('find'),
-		getString('where')
-	);
-}
-
-//To search for challenges with a query
-else if (onlyKeyword('search', $keywords)) {
-	$return = searchChallenges(
-		getString('search'),
-		getString('where')
-	);
-}
-
-//Return a value if needed
-if (!empty($return))
-	echo $return;
 
 //Functions
 //=========

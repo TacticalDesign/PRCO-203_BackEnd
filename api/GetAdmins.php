@@ -1,67 +1,69 @@
 <?php
 
-include("Locations.php");
-include("Tools.php");
-
-$keywords = array('new', 'edit', 'delete', 'find', 'search');
-$return = "false";
+include_once("Locations.php");
+include_once("Tools.php");
 
 $admins = file_get_contents(adminFile);
 
-//To create a new admin with a given email
-if (onlyKeyword('new', $keywords)) {
-	$return = createUser(
-		getBool('frozen'),
-		getString('new'),
-		getEncrypted('password'),
-		getString('firstName'),
-		getString('surname')
-	);
-}
+if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) {
+	$return = "false";
+	$keywords = array('new', 'edit', 'delete', 'find', 'search');
 
-//To edit an existing admin with a given ID
-else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
-	$return = editUser(
-		getString('edit'),
-		getBool('frozen'),
-		getString('email'),
-		getEncrypted('password'),
-		getString('firstName'),
-		getString('surname')
-	);
-}
+	//To create a new admin with a given email
+	if (onlyKeyword('new', $keywords)) {
+		$return = createUser(
+			getBool('frozen'),
+			getString('new'),
+			getEncrypted('password'),
+			getString('firstName'),
+			getString('surname')
+		);
+	}
 
-//To delete an admin with a given ID
-else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(
-		getString('delete')
-	);
-}
+	//To edit an existing admin with a given ID
+	else if (onlyKeyword('edit', $keywords) &&
+			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
+		$return = editUser(
+			getString('edit'),
+			getBool('frozen'),
+			getString('email'),
+			getEncrypted('password'),
+			getString('firstName'),
+			getString('surname')
+		);
+	}
 
-//To find only specific admins with given IDs
-else if (onlyKeyword('find', $keywords)) {
-	$return = findUsers(
-		getString('find'),
-		getString('where')
-	);
-}
+	//To delete an admin with a given ID
+	else if (onlyKeyword('delete', $keywords)) {
+		$return = deleteUser(
+			getString('delete')
+		);
+	}
 
-//To search for admins with a query
-else if (onlyKeyword('search', $keywords)) {
-	$return = searchUsers(
-		getString('search'),
-		getString('where')
-	);
-}
+	//To find only specific admins with given IDs
+	else if (onlyKeyword('find', $keywords)) {
+		$return = findUsers(
+			getString('find'),
+			getString('where')
+		);
+	}
 
-else if (onlyKeyword('test', array('test'))) {
-	$return = json_encode(array('thing' => getBool('test')));
-}
+	//To search for admins with a query
+	else if (onlyKeyword('search', $keywords)) {
+		$return = searchUsers(
+			getString('search'),
+			getString('where')
+		);
+	}
 
-//Return a value if needed
-if (!empty($return))
-	echo $return;
+	else if (onlyKeyword('test', array('test'))) {
+		$return = json_encode(array('thing' => getBool('test')));
+	}
+
+	//Return a value if needed
+	if (!empty($return))
+		echo $return;
+}
 
 //Functions
 //=========

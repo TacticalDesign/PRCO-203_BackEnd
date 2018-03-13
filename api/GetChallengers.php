@@ -1,92 +1,94 @@
 <?php
 
-include("Locations.php");
-include("Tools.php");
-
-$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
-$return = "false";
+include_once("Locations.php");
+include_once("Tools.php");
 
 $challengers = file_get_contents(challengerFile);
 
-//To create a new challenger with a given email
-if (onlyKeyword('new', $keywords)) {
-	$return = createUser(
-		getString('new'),
-		getEncrypted('password'),
-		getString('name'),
-		getString('colour'),
-		getString('contactEmail'),
-		getString('contactPhone'),
-		getString('about'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) {
+	$return = "false";
+	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 
-//To edit an existing challenger with a given ID
-else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
-					 'about', 'currentChallenges', 'archivedChallenges'))) {
-	$return = editUser(
-		getString('edit'),
-		getString('email'),
-		getEncrypted('password'),
-		getString('name'),
-		getString('colour'),
-		getString('contactEmail'),
-		getString('contactPhone'),
-		getString('about'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
-			
-//To push values to a young person's array contents
-else if (onlyKeyword('push', $keywords) &&
-		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-	$return = pushUser(
-		getString('push'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+	//To create a new challenger with a given email
+	if (onlyKeyword('new', $keywords)) {
+		$return = createUser(
+			getString('new'),
+			getEncrypted('password'),
+			getString('name'),
+			getString('colour'),
+			getString('contactEmail'),
+			getString('contactPhone'),
+			getString('about'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To pop values from a young person's array contents
-else if (onlyKeyword('pop', $keywords) &&
-		 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-	$return = popUser(
-		getString('pop'),
-		getArray('currentChallenges'),
-		getArray('archivedChallenges')
-	);
-}
+	//To edit an existing challenger with a given ID
+	else if (onlyKeyword('edit', $keywords) &&
+			 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
+						 'about', 'currentChallenges', 'archivedChallenges'))) {
+		$return = editUser(
+			getString('edit'),
+			getString('email'),
+			getEncrypted('password'),
+			getString('name'),
+			getString('colour'),
+			getString('contactEmail'),
+			getString('contactPhone'),
+			getString('about'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
+				
+	//To push values to a young person's array contents
+	else if (onlyKeyword('push', $keywords) &&
+			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
+		$return = pushUser(
+			getString('push'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To delete a challenger with a given ID
-else if (onlyKeyword('delete', $keywords)) {
-	$return = deleteUser(
-		getString('delete')
-	);
-}
+	//To pop values from a young person's array contents
+	else if (onlyKeyword('pop', $keywords) &&
+			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
+		$return = popUser(
+			getString('pop'),
+			getArray('currentChallenges'),
+			getArray('archivedChallenges')
+		);
+	}
 
-//To return only specific challengers with given IDs
-else if (onlyKeyword('find', $keywords)) {
-	$return = findUsers(
-		getString('find'),
-		getString('where')
-	);
-}
+	//To delete a challenger with a given ID
+	else if (onlyKeyword('delete', $keywords)) {
+		$return = deleteUser(
+			getString('delete')
+		);
+	}
 
-//To search for challengers with a query
-else if (onlyKeyword('search', $keywords)) {
-	$return = searchUsers(
-		getString('search'),
-		getString('where')
-	);
-}
+	//To return only specific challengers with given IDs
+	else if (onlyKeyword('find', $keywords)) {
+		$return = findUsers(
+			getString('find'),
+			getString('where')
+		);
+	}
 
-//Return a value if needed
-if (!empty($return))
-	echo $return;
+	//To search for challengers with a query
+	else if (onlyKeyword('search', $keywords)) {
+		$return = searchUsers(
+			getString('search'),
+			getString('where')
+		);
+	}
+
+	//Return a value if needed
+	if (!empty($return))
+		echo $return;
+}
 
 //Functions
 //=========
