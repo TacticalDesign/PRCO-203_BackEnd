@@ -3,7 +3,7 @@
 include("Locations.php");
 include("Tools.php");
 
-$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
+$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'delete', 'find', 'search');
 $return = "false";
 
 $youngPeople = file_get_contents(youngPeopleFile);
@@ -68,6 +68,16 @@ else if (onlyKeyword('pop', $keywords) &&
 	);
 }
 
+//To add a new feedback to a young person with a given ID
+else if (onlyKeyword('feedback', $keywords)) {
+	$return = feedbackUser(
+		getString('feedback'),
+		getString('challenge'),
+		getInt('rating'),
+		getString('comment')
+	);
+}
+
 //To delete a young person with a given ID
 else if (onlyKeyword('delete', $keywords)) {
 	$return = deleteUser(
@@ -114,6 +124,7 @@ function createUser($frozen, $email, $password, $firstName,
 	$returnable->interests          = $interests;
 	$returnable->currentChallenges  = $currentChallenges;
 	$returnable->archivedChallenges = $archivedChallenges;
+	$returnable->feedbacks			= array();
 	
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	array_push($_youngPeople, $returnable);
@@ -195,6 +206,29 @@ function popUser($id, $skills, $interests,
 			$person->interests = array_values(array_diff($person->interests, $interests));
 			$person->currentChallenges = array_values(array_diff($person->currentChallenges, $currentChallenges));
 			$person->archivedChallenges = array_values(array_diff($person->archivedChallenges, $archivedChallenges));
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	unset($returnable->password);
+	return json_encode($returnable);
+}
+
+function feedbackUser($id, $challenge, $rating, $comment) {
+	$feedback = new stdClass();
+	$feedback->challenge = $challenge;
+	$feedback->rating = $rating;
+	$feedback->comment = $comment;
+	
+	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	
+	$returnable = false;
+	foreach($_youngPeople as $i => $person) {
+		if ($person->id == $id) {
+			array_push($person->feedbacks, $feedback);
 			
 			$returnable = $person;
 		}
