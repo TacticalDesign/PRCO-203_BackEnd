@@ -11,6 +11,7 @@ $youngPeople = file_get_contents(youngPeopleFile);
 //To create a new young person with a given email
 if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
+		getBool('frozen'),
 		getString('new'),
 		getEncrypted('password'),
 		getString('firstName'),
@@ -25,10 +26,12 @@ if (onlyKeyword('new', $keywords)) {
 
 //To edit an existing young person at a given ID
 else if (onlyKeyword('edit', $keywords) && 
-		 atLeastOne(array('email', 'password', 'firstName', 'surname', 'balance', 'skills',
-				     'interests', 'currentChallenges', 'archivedChallenges'))) {
+		 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname',
+						  'balance', 'skills', 'interests', 'currentChallenges',
+						  'archivedChallenges'))) {
 	$return = editUser(
 		getString('edit'),
+		getBool('frozen'),
 		getString('email'),
 		getEncrypted('password'),
 		getString('firstName'),
@@ -95,30 +98,12 @@ if (!empty($return))
 //Functions
 //=========
 
-function deleteUser($ids) {
-	$wantedIDs = explode(',', $ids);
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_youngPeople as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			//unset($person->password);
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
-	}
-	
-	$GLOBALS['youngPeople'] = json_encode($keeps);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode($returnable);
-}
-
-function createUser($email, $password, $firstName,
+function createUser($frozen, $email, $password, $firstName,
 					$surname, $balance, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
+	$returnable->frozen				= $frozen;
 	$returnable->email              = $email;
 	$returnable->password           = $password;
 	$returnable->firstName          = $firstName;
@@ -138,7 +123,7 @@ function createUser($email, $password, $firstName,
 	return json_encode($returnable);
 }
 
-function editUser($id, $email, $password, $firstName,
+function editUser($id, $frozen, $email, $password, $firstName,
 					$surname, $balance, $skills, $interests,
 					$currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
@@ -146,6 +131,8 @@ function editUser($id, $email, $password, $firstName,
 	$returnable = false;
 	foreach($_youngPeople as $i => $person) {
 		if ($person->id == $id) {
+			if ($frozen != null)
+				$person->frozen = $frozen;
 			if ($email != null)
 				$person->email = $email;
 			if ($password != null)
@@ -216,6 +203,25 @@ function popUser($id, $skills, $interests,
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	unset($returnable->password);
+	return json_encode($returnable);
+}
+
+function deleteUser($ids) {
+	$wantedIDs = explode(',', $ids);
+	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	
+	$keeps = array();
+	$returnable = array();
+	foreach($_youngPeople as $i => $person) {
+		if (in_array($person->id, $wantedIDs)) {
+			//unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
+	}
+	
+	$GLOBALS['youngPeople'] = json_encode($keeps);
+	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
 	return json_encode($returnable);
 }
 

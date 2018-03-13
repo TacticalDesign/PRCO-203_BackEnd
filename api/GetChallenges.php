@@ -11,6 +11,7 @@ $challenges = file_get_contents(currentChallengesFile);
 //To create a new challenge with a given name
 if (onlyKeyword('new', $keywords)) {
 	$return = createChallenge(
+		getBool('frozen'),
 		getString('challenger'),
 		getString('adminApproved'),
 		getString('new'),
@@ -29,11 +30,12 @@ if (onlyKeyword('new', $keywords)) {
 
 //To edit an existing challenge with a given ID
 else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('challenger', 'adminApproved', 'name', 'skills', 'description', 'reward',
-					      'location1', 'location2', 'location3', 'closingTime', 'minAttendees',
-					      'maxAttendees', 'attendees'))) {
+		 atLeastOne(array('frozen', 'challenger', 'adminApproved', 'name', 'skills', 'description',
+						  'reward', 'location1', 'location2', 'location3', 'closingTime',
+						  'minAttendees', 'maxAttendees', 'attendees'))) {
 	$return = editChallenge(
 		getString('edit'),
+		getBool('frozen'),
 		getString('challenger'),
 		getString('adminApproved'),
 		getString('name'),
@@ -100,30 +102,13 @@ if (!empty($return))
 //Functions
 //=========
 
-function deleteChallenge($ids) {
-	$wantedIDs = explode(',', $ids);
-	$_challenges = json_decode($GLOBALS['challenges']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_challenges as $i => $thing) {
-		if (in_array($thing->id, $wantedIDs))
-			array_push($returnable, $thing);
-		else 
-			array_push($keeps, $thing);
-	}
-	
-	$GLOBALS['challenges'] = json_encode($keeps);
-	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode($returnable);
-}
-
-function createChallenge($challenger, $adminApproved, $name,
+function createChallenge($frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$returnable = new stdClass();
 	$returnable->id            = date("zyHis");
+	$returnable->frozen        = $frozen;
 	$returnable->challenger    = $challenger;
 	$returnable->adminApproved = $adminApproved;
 	$returnable->name          = $name;
@@ -147,7 +132,7 @@ function createChallenge($challenger, $adminApproved, $name,
 	return json_encode($returnable);
 }
 
-function editChallenge($id, $challenger, $adminApproved, $name,
+function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
@@ -156,6 +141,8 @@ function editChallenge($id, $challenger, $adminApproved, $name,
 	$returnable = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
+			if ($frozen != null)
+				$thing->frozen = $frozen;
 			if ($challenger != null)
 				$thing->challenger = $challenger;
 			if ($adminApproved != null)
@@ -226,6 +213,24 @@ function popChallenge($id, $skills, $attendees) {
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
 	unset($returnable->password);
+	return json_encode($returnable);
+}
+
+function deleteChallenge($ids) {
+	$wantedIDs = explode(',', $ids);
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	$keeps = array();
+	$returnable = array();
+	foreach($_challenges as $i => $thing) {
+		if (in_array($thing->id, $wantedIDs))
+			array_push($returnable, $thing);
+		else 
+			array_push($keeps, $thing);
+	}
+	
+	$GLOBALS['challenges'] = json_encode($keeps);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
 	return json_encode($returnable);
 }
 

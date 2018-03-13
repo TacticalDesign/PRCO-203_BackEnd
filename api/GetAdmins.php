@@ -11,6 +11,7 @@ $admins = file_get_contents(adminFile);
 //To create a new admin with a given email
 if (onlyKeyword('new', $keywords)) {
 	$return = createUser(
+		getBool('frozen'),
 		getString('new'),
 		getEncrypted('password'),
 		getString('firstName'),
@@ -20,9 +21,10 @@ if (onlyKeyword('new', $keywords)) {
 
 //To edit an existing admin with a given ID
 else if (onlyKeyword('edit', $keywords) &&
-		 atLeastOne(array('email', 'password', 'firstName', 'surname'))) {
+		 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
 	$return = editUser(
 		getString('edit'),
+		getBool('frozen'),
 		getString('email'),
 		getEncrypted('password'),
 		getString('firstName'),
@@ -64,9 +66,10 @@ if (!empty($return))
 //Functions
 //=========
 
-function createUser($email, $password, $firstName, $surname) {
+function createUser($frozen, $email, $password, $firstName, $surname) {
 	$returnable = new stdClass();
 	$returnable->id        = date("zyHis");
+	$returnable->frozen    = $frozen;
 	$returnable->email     = $email;
 	$returnable->password  = $password;
 	$returnable->firstName = $firstName;
@@ -81,12 +84,14 @@ function createUser($email, $password, $firstName, $surname) {
 	return json_encode($returnable);
 }
 
-function editUser($id, $email, $password, $firstName, $surname) {
+function editUser($id, $frozen, $email, $password, $firstName, $surname) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
 	foreach($_admins as $i => $person) {
 		if ($person->id == $id) {
+			if ($frozen != null)
+				$person->frozen = $frozen;
 			if ($email != null)
 				$person->email = $email;
 			if ($password != null)
