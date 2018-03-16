@@ -23,8 +23,8 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 			getString('location2'),
 			getString('location3'),
 			getString('closingTime'),
-			getString('minAttendees'),
-			getString('maxAttendees'),
+			getInt('minAttendees'),
+			getInt('maxAttendees'),
 			getArray('attendees')
 		);
 	}
@@ -47,8 +47,8 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 			getString('location2'),
 			getString('location3'),
 			getString('closingTime'),
-			getString('minAttendees'),
-			getString('maxAttendees'),
+			getInt('minAttendees'),
+			getInt('maxAttendees'),
 			getArray('attendees')
 		);
 	}
