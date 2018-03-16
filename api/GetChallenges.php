@@ -97,8 +97,9 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	}
 	
 	//Return a value if needed
-	if (!empty($return))
+	if (!empty($return)) {		
 		echo $return;
+	}
 }
 
 
@@ -108,7 +109,8 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 function createChallenge($frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees,
+						 $goDeeper = true) {
 	$returnable = new stdClass();
 	$returnable->id            = date("zyHis");
 	$returnable->frozen        = $frozen;
@@ -131,14 +133,14 @@ function createChallenge($frozen, $challenger, $adminApproved, $name,
 	array_push($_challenges, $returnable);
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, false));
 }
 
 function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees,
+						 $goDeeper = true) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -177,11 +179,11 @@ function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function pushChallenge($id, $skills, $attendees) {
+function pushChallenge($id, $skills, $attendees,
+					   $goDeeper = true) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -196,11 +198,11 @@ function pushChallenge($id, $skills, $attendees) {
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function popChallenge($id, $skills, $attendees) {
+function popChallenge($id, $skills, $attendees,
+					  $goDeeper = true) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -215,11 +217,11 @@ function popChallenge($id, $skills, $attendees) {
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function deleteChallenge($ids) {
+function deleteChallenge($ids,
+						 $goDeeper = true) {
 	$wantedIDs = explode(',', $ids);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -234,11 +236,11 @@ function deleteChallenge($ids) {
 	
 	$GLOBALS['challenges'] = json_encode($keeps);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function findChallenges($ids, $where) {
-	
+function findChallenges($ids, $where,
+						$goDeeper = true) {	
 	$params = [];
 	if ($where !== null) {
 		if (!empty($where)) {
@@ -278,10 +280,11 @@ function findChallenges($ids, $where) {
 		}
 	}
 	
-	return json_encode($wantedItems);
+	return json_encode(getReturnReady($wantedItems, $goDeeper));
 }
 
-function searchChallenges($searchPhrase, $where) {
+function searchChallenges($searchPhrase, $where,
+						  $goDeeper = true) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -339,7 +342,7 @@ function searchChallenges($searchPhrase, $where) {
 		}
 	}
 	
-	return json_encode($matches);
+	return json_encode(getReturnReady($matches, $goDeeper));
 }
 
 

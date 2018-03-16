@@ -1,5 +1,7 @@
 <?php
 
+include_once("GetChallengers.php");
+
 function onlyKeyword($keyword, $keywords) {
 	foreach	($keywords as $i => $key) {
 		if ($key != $keyword && !empty($_GET[$key]))
@@ -70,5 +72,44 @@ function getBool($var) {
 		return !in_array($_GET[$var], $falsey);
 	}
 }
+
+function getReturnReady($data, $goDeeper) {
+	if (is_array($data)) {
+		foreach	($data as $i => $obj) {
+			$obj = getObjReturnReady($obj, $goDeeper);
+		}
+		return $data;
+	}
+	else
+		return getObjReturnReady($data, $goDeeper);
+}
+
+function getObjReturnReady($data, $goDeeper) {
+	if (!empty($data->password))
+		unset($data->password);
+	
+	if ($goDeeper) {
+		if (!empty($data->challenger)) {
+			$results = json_decode(findUsers($data->challenger, null));
+			if (count($results) > 0)
+				$data->challenger = $results[0];
+		}
+	}
+	
+	return $data;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ?>
