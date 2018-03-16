@@ -5,7 +5,7 @@ include_once("Tools.php");
 
 $challengers = file_get_contents(challengerFile);
 
-if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) {
+if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	$return = "false";
 	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 
