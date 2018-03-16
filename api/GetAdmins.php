@@ -93,15 +93,15 @@ function editUser($id, $frozen, $email, $password, $firstName, $surname) {
 	$returnable = false;
 	foreach($_admins as $i => $person) {
 		if ($person->id == $id) {
-			if ($frozen != null)
+			if ($frozen !== null)
 				$person->frozen = $frozen;
-			if ($email != null)
+			if ($email !== null)
 				$person->email = $email;
-			if ($password != null)
+			if ($password !== null)
 				$person->password = $password;
-			if ($firstName != null)
+			if ($firstName !== null)
 				$person->firstName = $firstName;
-			if ($surname != null)
+			if ($surname !== null)
 				$person->surname = $surname;
 			
 			$returnable = $person;
@@ -136,7 +136,7 @@ function deleteUser($ids) {
 function findUsers($ids, $where) {
 	
 	$params = [];
-	if ($where != null) {
+	if ($where !== null) {
 		if (!empty($where)) {
 			$params = explode(';', $where);
 			for	($iii = 0; $iii < count($params); $iii++) {

@@ -14,7 +14,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 		$return = createChallenge(
 			getBool('frozen'),
 			getString('challenger'),
-			getString('adminApproved'),
+			getBool('adminApproved'),
 			getString('new'),
 			getArray('skills'),
 			getString('description'),
@@ -38,7 +38,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 			getString('edit'),
 			getBool('frozen'),
 			getString('challenger'),
-			getString('adminApproved'),
+			getBool('adminApproved'),
 			getString('name'),
 			getArray('skills'),
 			getString('description'),
@@ -125,7 +125,7 @@ function createChallenge($frozen, $challenger, $adminApproved, $name,
 	$returnable->closingTime   = $closingTime;
 	$returnable->minAttendees  = $minAttendees;
 	$returnable->maxAttendees  = $maxAttendees;
-	$returnable->attendees  = $attendees;
+	$returnable->attendees     = $attendees;
 		
 	$_challenges = json_decode($GLOBALS['challenges']);
 	array_push($_challenges, $returnable);
@@ -144,31 +144,31 @@ function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 	$returnable = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
-			if ($frozen != null)
+			if ($frozen !== null)
 				$thing->frozen = $frozen;
-			if ($challenger != null)
+			if ($challenger !== null)
 				$thing->challenger = $challenger;
-			if ($adminApproved != null)
+			if ($adminApproved !== null)
 				$thing->adminApproved = $adminApproved;
-			if ($name != null)
+			if ($name !== null)
 				$thing->name = $name;
-			if ($skills != null)
+			if ($skills !== null)
 				$thing->skills = $skills;
-			if ($description != null)
+			if ($description !== null)
 				$thing->description = $description;
-			if ($reward != null)
+			if ($reward !== null)
 				$thing->reward = $reward;
-			if ($location1 != null)
+			if ($location1 !== null)
 				$thing->location1 = $location1;
-			if ($location2 != null)
+			if ($location2 !== null)
 				$thing->location2 = $location2;
-			if ($location3 != null)
+			if ($location3 !== null)
 				$thing->location3 = $location3;
-			if ($closingTime != null)
+			if ($closingTime !== null)
 				$thing->closingTime = $closingTime;
-			if ($minAttendees != null)
+			if ($minAttendees !== null)
 				$thing->minAttendees = $minAttendees;
-			if ($maxAttendees != null)
+			if ($maxAttendees !== null)
 				$thing->maxAttendees = $maxAttendees;
 			
 			$returnable = $thing;
@@ -240,7 +240,7 @@ function deleteChallenge($ids) {
 function findChallenges($ids, $where) {
 	
 	$params = [];
-	if ($where != null) {
+	if ($where !== null) {
 		if (!empty($where)) {
 			$params = explode(';', $where);
 			for	($iii = 0; $iii < count($params); $iii++) {

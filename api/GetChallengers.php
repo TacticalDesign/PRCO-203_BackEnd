@@ -144,23 +144,23 @@ function editUser($id, $email, $password, $name, $colour,
 	$returnable = false;
 	foreach($_challengers as $i => $person) {
 		if ($person->id == $id) {
-			if ($email != null)
+			if ($email !== null)
 				$person->email = $email;
-			if ($password != null)
+			if ($password !== null)
 				$person->password = $password;
-			if ($name != null)
+			if ($name !== null)
 				$person->name = $name;
-			if ($colour != null)
+			if ($colour !== null)
 				$person->colour = $colour;
-			if ($contactEmail != null)
+			if ($contactEmail !== null)
 				$person->contactEmail = $contactEmail;
-			if ($contactPhone != null)
+			if ($contactPhone !== null)
 				$person->contactPhone = $contactPhone;
-			if ($about != null)
+			if ($about !== null)
 				$person->about = $about;
-			if ($currentChallenges != null)
+			if ($currentChallenges !== null)
 				$person->currentChallenges = $currentChallenges;
-			if ($archivedChallenges != null)
+			if ($archivedChallenges !== null)
 				$person->archivedChallenges = $archivedChallenges;
 			
 			$returnable = $person;
@@ -210,7 +210,7 @@ function popUser($id, $currentChallenges, $archivedChallenges) {
 
 function findUsers($ids, $where) {
 	$params = [];
-	if ($where != null) {
+	if ($where !== null) {
 		if (!empty($where)) {
 			$params = explode(';', $where);
 			for	($iii = 0; $iii < count($params); $iii++) {

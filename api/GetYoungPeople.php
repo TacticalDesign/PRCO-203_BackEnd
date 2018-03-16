@@ -156,25 +156,25 @@ function editUser($id, $frozen, $email, $password, $firstName,
 	$returnable = false;
 	foreach($_youngPeople as $i => $person) {
 		if ($person->id == $id) {
-			if ($frozen != null)
+			if ($frozen !== null)
 				$person->frozen = $frozen;
-			if ($email != null)
+			if ($email !== null)
 				$person->email = $email;
-			if ($password != null)
+			if ($password !== null)
 				$person->password = $password;
-			if ($firstName != null)
+			if ($firstName !== null)
 				$person->firstName = $firstName;
-			if ($surname != null)
+			if ($surname !== null)
 				$person->surname = $surname;
-			if ($balance != null)
+			if ($balance !== null)
 				$person->balance = $balance;
-			if ($skills != null)
+			if ($skills !== null)
 				$person->skills = $skills;
-			if ($interests != null)
+			if ($interests !== null)
 				$person->interests = $interests;
-			if ($currentChallenges != null)
+			if ($currentChallenges !== null)
 				$person->currentChallenges = $currentChallenges;
-			if ($archivedChallenges != null)
+			if ($archivedChallenges !== null)
 				$person->archivedChallenges = $archivedChallenges;
 			
 			$returnable = $person;
@@ -288,7 +288,7 @@ function deleteUser($ids) {
 function findUsers($ids, $where) {
 	
 	$params = [];
-	if ($where != null) {
+	if ($where !== null) {
 		if (!empty($where)) {
 			$params = explode(';', $where);
 			for	($iii = 0; $iii < count($params); $iii++) {

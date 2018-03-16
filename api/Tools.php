@@ -64,10 +64,11 @@ function getBool($var) {
 	$falsey = array('', '0', 'false', 'False', 'FALSE');
 	if (empty($_GET[$var]))
 		return false;
-	else if (is_array($_GET[$var]))
+	else if (is_array($_GET[$var])) {
 		return !in_array(array_values($_GET[$var])[0], $falsey);
-	else
+	} else {
 		return !in_array($_GET[$var], $falsey);
+	}
 }
 
 ?>
