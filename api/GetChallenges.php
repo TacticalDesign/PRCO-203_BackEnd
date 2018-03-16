@@ -275,7 +275,6 @@ function findChallenges($ids, $where,
 			continue;
 		
 		if ($ids == "all" || in_array($challenge->id, $wantedIDs)) {
-			unset($challenge->password);
 			array_push($wantedItems, $challenge);
 		}
 	}
@@ -334,7 +333,6 @@ function searchChallenges($searchPhrase, $where,
 							  || strpos(strtolower($challenge->location2), $term) !== false
 							  || strpos(strtolower($challenge->location3), $term) !== false)
 							  && !in_array($challenge->id, $matchedIDs)) {
-					unset($challenge->password);
 					array_push($matches, $challenge);
 					array_push($matchedIDs, $challenge->id);
 				}

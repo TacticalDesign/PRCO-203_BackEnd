@@ -1,5 +1,6 @@
 <?php
 
+include_once("GetYoungPeople.php");
 include_once("GetChallengers.php");
 include_once("GetChallenges.php");
 
@@ -86,12 +87,11 @@ function getReturnReady($data, $goDeeper) {
 }
 
 function getObjReturnReady($data, $goDeeper) {
-	if (!empty($data->password))
-		unset($data->password);
+	unset($data->password);
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = json_decode(findUsers($data->challenger, null, false));
+			$results = json_decode(findChallenger($data->challenger, null, false));
 			if (count($results) > 0)
 				$data->challenger = $results[0];
 		}
@@ -99,6 +99,11 @@ function getObjReturnReady($data, $goDeeper) {
 			$results = json_decode(findChallenges(implode(',', $data->currentChallenges), null, false));
 			if (count($results) > 0)
 				$data->currentChallenges = $results;
+		}
+		if (!empty($data->attendees)) {
+			$results = json_decode(findYoungPerson(implode(',', $data->attendees), null, false));
+			if (count($results) > 0)
+				$data->attendees = $results;
 		}
 	}
 	

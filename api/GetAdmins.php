@@ -12,7 +12,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To create a new admin with a given email
 	if (onlyKeyword('new', $keywords)) {
-		$return = createUser(
+		$return = createAdmin(
 			getBool('frozen'),
 			getString('new'),
 			getEncrypted('password'),
@@ -24,7 +24,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	//To edit an existing admin with a given ID
 	else if (onlyKeyword('edit', $keywords) &&
 			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
-		$return = editUser(
+		$return = editAdmin(
 			getString('edit'),
 			getBool('frozen'),
 			getString('email'),
@@ -36,14 +36,14 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To delete an admin with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteUser(
+		$return = deleteAdmin(
 			getString('delete')
 		);
 	}
 
 	//To find only specific admins with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findUsers(
+		$return = findAdmin(
 			getString('find'),
 			getString('where')
 		);
@@ -51,7 +51,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To search for admins with a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchUsers(
+		$return = searchAdmin(
 			getString('search'),
 			getString('where')
 		);
@@ -69,7 +69,8 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 //Functions
 //=========
 
-function createUser($frozen, $email, $password, $firstName, $surname) {
+function createAdmin($frozen, $email, $password, $firstName, $surname,
+					 $goDeeper = true) {
 	$returnable = new stdClass();
 	$returnable->id        = date("zyHis");
 	$returnable->frozen    = $frozen;
@@ -83,11 +84,11 @@ function createUser($frozen, $email, $password, $firstName, $surname) {
 	array_push($_admins, $returnable);
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function editUser($id, $frozen, $email, $password, $firstName, $surname) {
+function editAdmin($id, $frozen, $email, $password, $firstName, $surname,
+				   $goDeeper = true) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
@@ -110,11 +111,11 @@ function editUser($id, $frozen, $email, $password, $firstName, $surname) {
 	
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	unset($returnable->password);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function deleteUser($ids) {
+function deleteAdmin($ids,
+					 $goDeeper = true) {
 	$wantedIDs = explode(',', $ids);
 	$_admins = json_decode($GLOBALS['admins']);
 	
@@ -122,7 +123,6 @@ function deleteUser($ids) {
 	$returnable = array();
 	foreach($_admins as $i => $person) {
 		if (in_array($person->id, $wantedIDs)) {
-			unset($person->password);
 			array_push($returnable, $person);
 		} else 
 			array_push($keeps, $person);
@@ -130,10 +130,11 @@ function deleteUser($ids) {
 	
 	$GLOBALS['admins'] = json_encode($keeps);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function findUsers($ids, $where) {
+function findAdmin($ids, $where,
+				   $goDeeper = true) {
 	
 	$params = [];
 	if ($where !== null) {
@@ -169,15 +170,15 @@ function findUsers($ids, $where) {
 			continue;
 		
 		if ($ids == "all" || in_array($person->id, $wantedIDs)) {
-			unset($person->password);
 			array_push($wantedUsers, $person);
 		}
 	}
 	
-	return json_encode($wantedUsers);
+	return json_encode(getReturnReady($wantedUsers, $goDeeper));
 }
 
-function searchUsers($searchPhrase, $where) {
+function searchAdmin($searchPhrase, $where,
+					 $goDeeper = true) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_admins = json_decode($GLOBALS['admins']);
 	
@@ -222,7 +223,6 @@ function searchUsers($searchPhrase, $where) {
 				if ((strpos(strtolower($person->firstName), $term) !== false
 							  || strpos(strtolower($person->surname), $term) !== false)
 							  && !in_array($person->id, $matchedIDs)) {
-					unset($person->password);
 					array_push($matches, $person);
 					array_push($matchedIDs, $person->id);
 				}
@@ -230,7 +230,7 @@ function searchUsers($searchPhrase, $where) {
 		}
 	}
 	
-	return json_encode($matches);
+	return json_encode(getReturnReady($matches, $goDeeper));
 }
 
 

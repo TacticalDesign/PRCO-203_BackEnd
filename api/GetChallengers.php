@@ -11,7 +11,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To create a new challenger with a given email
 	if (onlyKeyword('new', $keywords)) {
-		$return = createUser(
+		$return = createChallenger(
 			getString('new'),
 			getEncrypted('password'),
 			getString('name'),
@@ -28,7 +28,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	else if (onlyKeyword('edit', $keywords) &&
 			 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
 						 'about', 'currentChallenges', 'archivedChallenges'))) {
-		$return = editUser(
+		$return = editChallenger(
 			getString('edit'),
 			getString('email'),
 			getEncrypted('password'),
@@ -45,7 +45,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	//To push values to a young person's array contents
 	else if (onlyKeyword('push', $keywords) &&
 			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$return = pushUser(
+		$return = pushChallenger(
 			getString('push'),
 			getArray('currentChallenges'),
 			getArray('archivedChallenges')
@@ -55,7 +55,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	//To pop values from a young person's array contents
 	else if (onlyKeyword('pop', $keywords) &&
 			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$return = popUser(
+		$return = popChallenger(
 			getString('pop'),
 			getArray('currentChallenges'),
 			getArray('archivedChallenges')
@@ -64,14 +64,14 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To delete a challenger with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteUser(
+		$return = deleteChallenger(
 			getString('delete')
 		);
 	}
 
 	//To return only specific challengers with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findUsers(
+		$return = findChallenger(
 			getString('find'),
 			getString('where')
 		);
@@ -79,7 +79,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//To search for challengers with a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchUsers(
+		$return = searchChallenger(
 			getString('search'),
 			getString('where')
 		);
@@ -93,7 +93,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 //Functions
 //=========
 
-function createUser($email, $password, $name, $colour,
+function createChallenger($email, $password, $name, $colour,
 					$contactEmail, $contactPhone, $about,
 					$currentChallenges, $archivedChallenges,
 					$goDeeper = true) {
@@ -118,7 +118,7 @@ function createUser($email, $password, $name, $colour,
 	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function editUser($id, $email, $password, $name, $colour,
+function editChallenger($id, $email, $password, $name, $colour,
 				  $contactEmail, $contactPhone, $about,
 				  $currentChallenges, $archivedChallenges,
 				  $goDeeper = true) {
@@ -155,7 +155,7 @@ function editUser($id, $email, $password, $name, $colour,
 	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function pushUser($id, $currentChallenges, $archivedChallenges,
+function pushChallenger($id, $currentChallenges, $archivedChallenges,
 				  $goDeeper = true) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
@@ -174,7 +174,7 @@ function pushUser($id, $currentChallenges, $archivedChallenges,
 	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function popUser($id, $currentChallenges, $archivedChallenges,
+function popChallenger($id, $currentChallenges, $archivedChallenges,
 				 $goDeeper = true) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
@@ -193,7 +193,7 @@ function popUser($id, $currentChallenges, $archivedChallenges,
 	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function deleteUser($ids,
+function deleteChallenger($ids,
 					$goDeeper = true) {
 	$wantedIDs = explode(',', $ids);
 	$_challengers = json_decode($GLOBALS['challengers']);
@@ -202,7 +202,6 @@ function deleteUser($ids,
 	$returnable = array();
 	foreach($_challengers as $i => $person) {
 		if (in_array($person->id, $wantedIDs)) {
-			unset($person->password);
 			array_push($returnable, $person);
 		} else 
 			array_push($keeps, $person);
@@ -213,7 +212,7 @@ function deleteUser($ids,
 	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function findUsers($ids, $where,
+function findChallenger($ids, $where,
 				   $goDeeper = true) {
 	$params = [];
 	if ($where !== null) {
@@ -254,7 +253,7 @@ function findUsers($ids, $where,
 	return json_encode(getReturnReady($wantedUsers, $goDeeper));
 }
 
-function searchUsers($searchPhrase, $where,
+function searchChallenger($searchPhrase, $where,
 					 $goDeeper = true) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challengers = json_decode($GLOBALS['challengers']);
