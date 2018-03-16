@@ -93,28 +93,10 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 //Functions
 //=========
 
-function deleteUser($ids) {
-	$wantedIDs = explode(',', $ids);
-	$_challengers = json_decode($GLOBALS['challengers']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_challengers as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			unset($person->password);
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
-	}
-	
-	$GLOBALS['challengers'] = json_encode($keeps);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($returnable);
-}
-
 function createUser($email, $password, $name, $colour,
 					$contactEmail, $contactPhone, $about,
-					$currentChallenges, $archivedChallenges) {
+					$currentChallenges, $archivedChallenges,
+					$goDeeper = true) {
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
 	$returnable->email              = $email;
@@ -133,12 +115,13 @@ function createUser($email, $password, $name, $colour,
 	array_push($_challengers, $returnable);
 	$GLOBALS['challengers'] = json_encode($_challengers);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
 function editUser($id, $email, $password, $name, $colour,
-					$contactEmail, $contactPhone, $about,
-					$currentChallenges, $archivedChallenges) {
+				  $contactEmail, $contactPhone, $about,
+				  $currentChallenges, $archivedChallenges,
+				  $goDeeper = true) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -169,10 +152,11 @@ function editUser($id, $email, $password, $name, $colour,
 	
 	$GLOBALS['challengers'] = json_encode($_challengers);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function pushUser($id, $currentChallenges, $archivedChallenges) {
+function pushUser($id, $currentChallenges, $archivedChallenges,
+				  $goDeeper = true) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -187,10 +171,11 @@ function pushUser($id, $currentChallenges, $archivedChallenges) {
 	
 	$GLOBALS['challengers'] = json_encode($_challengers);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function popUser($id, $currentChallenges, $archivedChallenges) {
+function popUser($id, $currentChallenges, $archivedChallenges,
+				 $goDeeper = true) {
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	$returnable = false;
@@ -205,10 +190,31 @@ function popUser($id, $currentChallenges, $archivedChallenges) {
 	
 	$GLOBALS['challengers'] = json_encode($_challengers);
 	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return json_encode($returnable);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function findUsers($ids, $where) {
+function deleteUser($ids,
+					$goDeeper = true) {
+	$wantedIDs = explode(',', $ids);
+	$_challengers = json_decode($GLOBALS['challengers']);
+	
+	$keeps = array();
+	$returnable = array();
+	foreach($_challengers as $i => $person) {
+		if (in_array($person->id, $wantedIDs)) {
+			unset($person->password);
+			array_push($returnable, $person);
+		} else 
+			array_push($keeps, $person);
+	}
+	
+	$GLOBALS['challengers'] = json_encode($keeps);
+	file_put_contents(challengerFile, $GLOBALS['challengers']);
+	return json_encode(getReturnReady($returnable, $goDeeper));
+}
+
+function findUsers($ids, $where,
+				   $goDeeper = true) {
 	$params = [];
 	if ($where !== null) {
 		if (!empty($where)) {
@@ -217,12 +223,10 @@ function findUsers($ids, $where) {
 				$params[$iii] = explode(':', $params[$iii], 2);
 			}
 		}
-	} else if ($ids == "all") {
-		return $GLOBALS['challengers'];
 	}
 	
 	$wantedIDs = explode(',', $ids);
-	$wantedUsers = [];
+	$wantedUsers = array();
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
 	foreach($_challengers as $i => $person) {
@@ -247,11 +251,11 @@ function findUsers($ids, $where) {
 		if ($ids == "all" || in_array($person->id, $wantedIDs))
 			array_push($wantedUsers, $person);
 	}
-	
-	return json_encode($wantedUsers);
+	return json_encode(getReturnReady($wantedUsers, $goDeeper));
 }
 
-function searchUsers($searchPhrase, $where) {
+function searchUsers($searchPhrase, $where,
+					 $goDeeper = true) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challengers = json_decode($GLOBALS['challengers']);
 	
@@ -303,7 +307,7 @@ function searchUsers($searchPhrase, $where) {
 		}
 	}
 	
-	return json_encode($matches);
+	return json_encode(getReturnReady($matches, $goDeeper));
 }
 
 

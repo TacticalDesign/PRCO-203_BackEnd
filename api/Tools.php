@@ -1,6 +1,7 @@
 <?php
 
 include_once("GetChallengers.php");
+include_once("GetChallenges.php");
 
 function onlyKeyword($keyword, $keywords) {
 	foreach	($keywords as $i => $key) {
@@ -90,9 +91,14 @@ function getObjReturnReady($data, $goDeeper) {
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = json_decode(findUsers($data->challenger, null));
+			$results = json_decode(findUsers($data->challenger, null, false));
 			if (count($results) > 0)
 				$data->challenger = $results[0];
+		}
+		if (!empty($data->currentChallenges)) {
+			$results = json_decode(findChallenges(implode(',', $data->currentChallenges), null, false));
+			if (count($results) > 0)
+				$data->currentChallenges = $results;
 		}
 	}
 	

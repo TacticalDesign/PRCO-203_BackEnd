@@ -252,7 +252,7 @@ function findChallenges($ids, $where,
 	}	
 	
 	$wantedIDs = explode(',', $ids);
-	$wantedItems = [];
+	$wantedItems = array();
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	foreach($_challenges as $i => $challenge) {
