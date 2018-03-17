@@ -1,0 +1,30 @@
+[
+	{
+		"id" : "345678",
+		"email" : "dave@devonlife.com",
+		"password" : "password1",
+		"name" : "Devon Life",
+		"image" : "img\/345678.png",
+		"cover" : "img\/cover\/345678.png",
+		"colour" : "#958374",
+		"contactEmail" : "contact@devonlife.com",
+		"contactPhone" : "07562354851",
+		"about" : "This is about our company",
+		"currentChallenges" : ["23456", "876543"],
+		"archivedChallenges" : []
+	},
+	{
+		"id" : "34577878",
+		"email" : "mike@cornwalllife.com",
+		"password" : "password2",
+		"name" : "Cornwall Life",
+		"image" : "img\/34577878.png",
+		"cover" : "img\/cover\/34577878.png",
+		"colour" : "#894365",
+		"contactEmail" : "contact@cornwalllife.com",
+		"contactPhone" : "07468264951",
+		"about" : "This is about our company",
+		"currentChallenges" : ["78942"],
+		"archivedChallenges" : ["6893574"]
+	}
+]

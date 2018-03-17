@@ -1,185 +1,289 @@
 <?php
 
-touch("CurrentChallenges.json");
+include_once("Locations.php");
+include_once("Tools.php");
 
-$return = null;
+$challenges = file_get_contents(currentChallengesFile);
 
-$challenges = file_get_contents("CurrentChallenges.json");
+if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+	$return = "false";
+	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 
-//To delete a challenge at a given ID
-if (!empty($_GET['delete'])) {
-	$return = deleteChallenge($_GET['delete']);
-}
+	//To create a new challenge with a given name
+	if (onlyKeyword('new', $keywords)) {
+		$return = createChallenge(
+			getBool('frozen'),
+			getString('challenger'),
+			getBool('adminApproved'),
+			getString('new'),
+			getArray('skills'),
+			getString('description'),
+			getInt('reward'),
+			getString('location1'),
+			getString('location2'),
+			getString('location3'),
+			getString('closingTime'),
+			getInt('minAttendees'),
+			getInt('maxAttendees'),
+			getArray('attendees')
+		);
+	}
 
-//To create a new challenge when no ID is given
-if (empty($_GET['edit']) && (
-		   !empty($_GET['challenger'])
-		|| !empty($_GET['adminApproved'])
-		|| !empty($_GET['name'])
-		|| !empty($_GET['image'])
-		|| !empty($_GET['skills'])
-		|| !empty($_GET['description'])
-		|| !empty($_GET['reward'])
-		|| !empty($_GET['location1'])
-		|| !empty($_GET['location2'])
-		|| !empty($_GET['location3'])
-		|| !empty($_GET['closingTime']))) {
-	$return = createChallenge(
-			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
-			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
-			!empty($_GET['name'])          ? $_GET['name'] : null,
-			!empty($_GET['image'])         ? $_GET['image'] : null,
-			!empty($_GET['skills']) 	   ? $_GET['skills'] : null,
-			!empty($_GET['description'])   ? $_GET['description'] : null,
-			!empty($_GET['reward'])        ? $_GET['reward'] : null,
-			!empty($_GET['location1'])     ? $_GET['location1'] : null,
-			!empty($_GET['location2'])     ? $_GET['location2'] : null,
-			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null);
+	//To edit an existing challenge with a given ID
+	else if (onlyKeyword('edit', $keywords) &&
+			 atLeastOne(array('frozen', 'challenger', 'adminApproved', 'name', 'skills', 'description',
+							  'reward', 'location1', 'location2', 'location3', 'closingTime',
+							  'minAttendees', 'maxAttendees', 'attendees'))) {
+		$return = editChallenge(
+			getString('edit'),
+			getBool('frozen'),
+			getString('challenger'),
+			getBool('adminApproved'),
+			getString('name'),
+			getArray('skills'),
+			getString('description'),
+			getInt('reward'),
+			getString('location1'),
+			getString('location2'),
+			getString('location3'),
+			getString('closingTime'),
+			getInt('minAttendees'),
+			getInt('maxAttendees'),
+			getArray('attendees')
+		);
+	}
+				
+	//To push values to a challenges array contents
+	else if (onlyKeyword('push', $keywords) &&
+			 atLeastOne(array('skills', 'attendees'))) {
+		$return = pushChallenge(
+			getString('push'),
+			getArray('skills'),
+			getArray('attendees')
+		);
+	}
 
-//To edit an existing challenge at a given ID
-} elseif (!empty($_GET['edit']) && (
-		   !empty($_GET['challenger'])
-		|| !empty($_GET['adminApproved'])
-		|| !empty($_GET['name'])
-		|| !empty($_GET['image'])
-		|| !empty($_GET['skills'])
-		|| !empty($_GET['description'])
-		|| !empty($_GET['reward'])
-		|| !empty($_GET['location1'])
-		|| !empty($_GET['location2'])
-		|| !empty($_GET['location3'])
-		|| !empty($_GET['closingTime']))) {
-	$return = editChallenge(
-			!empty($_GET['edit'])          ? $_GET['edit'] : null,
-			!empty($_GET['challenger'])    ? $_GET['challenger'] : null,
-			!empty($_GET['adminApproved']) ? $_GET['adminApproved'] : null,
-			!empty($_GET['name'])          ? $_GET['name'] : null,
-			!empty($_GET['image'])         ? $_GET['image'] : null,
-			!empty($_GET['skills']) 	   ? $_GET['skills'] : null,
-			!empty($_GET['description'])   ? $_GET['description'] : null,
-			!empty($_GET['reward'])        ? $_GET['reward'] : null,
-			!empty($_GET['location1'])     ? $_GET['location1'] : null,
-			!empty($_GET['location2'])     ? $_GET['location2'] : null,
-			!empty($_GET['location3'])     ? $_GET['location3'] : null,
-			!empty($_GET['closingTime'])   ? $_GET['closingTime'] : null);
-}
+	//To pop values from a challenges array contents
+	else if (onlyKeyword('pop', $keywords) &&
+			 atLeastOne(array('skills', 'attendees'))) {
+		$return = popChallenge(
+			getString('pop'),
+			getArray('skills'),
+			getArray('attendees')
+		);
+	}
 
-//To return only specific items at given IDs
-else if (!empty($_GET['find'])) {
-	$return = findChallenges($_GET['find']);
-}
+	//To delete a challenge with a given ID
+	else if (onlyKeyword('delete', $keywords)) {
+		$return = deleteChallenge(
+			getString('delete')
+		);
+	}
 
-else if (!empty($_GET['search'])) {
-	$return = searchChallenges(
-			$_GET['search'],
-			!empty($_GET['where']) ? $_GET['where'] : null);
-}
+	//To return only specific challenges with given IDs
+	else if (onlyKeyword('find', $keywords)) {
+		$return = findChallenges(
+			getString('find'),
+			getString('where')
+		);
+	}
 
-//Return a value if needed
-if (!empty($return))
-	echo $return;
-
-function deleteChallenge($id) {
-	$_challenges = json_decode($GLOBALS['challenges']);
-	
-	$success = false;
-	foreach($_challenges as $i => $thing) {
-		if ($thing->id == $id) {
-			unset($_challenges[$i]);
-			$_challenges = array_values($_challenges);
-			$success = $thing;
-		}
+	//To search for challenges with a query
+	else if (onlyKeyword('search', $keywords)) {
+		$return = searchChallenges(
+			getString('search'),
+			getString('where')
+		);
 	}
 	
-	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
-	return json_encode($success);
+	//Return a value if needed
+	if (!empty($return)) {		
+		echo $return;
+	}
 }
 
-function createChallenge($challenger, $adminApproved, $name,
-						 $image, $skills, $description,
-						 $reward, $location1, $location2,
-						 $location3, $closingTime) {
-	$newItem = new stdClass();
-	$newItem->id            = date("zyHis");
-	$newItem->challenger    = $challenger;
-	$newItem->adminApproved = $adminApproved;
-	$newItem->name          = $name;
-	$newItem->image         = $image;
-	$newItem->skills        = empty($skills) ? array() : $skills;
-	$newItem->description   = $description;
-	$newItem->reward        = $reward;
-	$newItem->location1     = $location1;
-	$newItem->location2     = $location2;
-	$newItem->location3     = $location3;
-	$newItem->closingTime   = $closingTime;
-	
+
+//Functions
+//=========
+
+function createChallenge($frozen, $challenger, $adminApproved, $name,
+						 $skills, $description, $reward,
+						 $location1, $location2, $location3,
+						 $closingTime, $minAttendees, $maxAttendees, $attendees,
+						 $goDeeper = true) {
+	$returnable = new stdClass();
+	$returnable->id            = date("zyHis");
+	$returnable->frozen        = $frozen;
+	$returnable->challenger    = $challenger;
+	$returnable->adminApproved = $adminApproved;
+	$returnable->name          = $name;
+	$returnable->image         = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->skills        = $skills;
+	$returnable->description   = $description;
+	$returnable->reward        = $reward;
+	$returnable->location1     = $location1;
+	$returnable->location2     = $location2;
+	$returnable->location3     = $location3;
+	$returnable->closingTime   = $closingTime;
+	$returnable->minAttendees  = $minAttendees;
+	$returnable->maxAttendees  = $maxAttendees;
+	$returnable->attendees     = $attendees;
+		
 	$_challenges = json_decode($GLOBALS['challenges']);
-	array_push($_challenges, $newItem);
+	array_push($_challenges, $returnable);
 	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
-	return $GLOBALS['challenges'];
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode(getReturnReady($returnable, false));
 }
 
-function editChallenge($id, $challenger, $adminApproved, $name,
-						 $image, $skills, $description,
-						 $reward, $location1, $location2,
-						 $location3, $closingTime) {
+function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
+						 $skills, $description, $reward,
+						 $location1, $location2, $location3,
+						 $closingTime, $minAttendees, $maxAttendees, $attendees,
+						 $goDeeper = true) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
 	foreach($_challenges as $i => $thing) {
 		if ($thing->id == $id) {
-			if ($challenger != null)
+			if ($frozen !== null)
+				$thing->frozen = $frozen;
+			if ($challenger !== null)
 				$thing->challenger = $challenger;
-			if ($adminApproved != null)
+			if ($adminApproved !== null)
 				$thing->adminApproved = $adminApproved;
-			if ($image != null)
-				$thing->image = $image;
-			if ($skills != null)
+			if ($name !== null)
+				$thing->name = $name;
+			if ($skills !== null)
 				$thing->skills = $skills;
-			if ($description != null)
+			if ($description !== null)
 				$thing->description = $description;
-			if ($reward != null)
+			if ($reward !== null)
 				$thing->reward = $reward;
-			if ($location1 != null)
+			if ($location1 !== null)
 				$thing->location1 = $location1;
-			if ($location2 != null)
+			if ($location2 !== null)
 				$thing->location2 = $location2;
-			if ($location3 != null)
+			if ($location3 !== null)
 				$thing->location3 = $location3;
-			if ($closingTime != null)
+			if ($closingTime !== null)
 				$thing->closingTime = $closingTime;
+			if ($minAttendees !== null)
+				$thing->minAttendees = $minAttendees;
+			if ($maxAttendees !== null)
+				$thing->maxAttendees = $maxAttendees;
 			
 			$returnable = $thing;
 		}
 	}
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
-	file_put_contents("CurrentChallenges.json", $GLOBALS['challenges']);
-	return json_encode($returnable);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function findChallenges($ids) {
-	if ($ids == "all"){
-		return $GLOBALS['challenges'];
-	}
-	
-	$wantedIDs = explode(',', $ids);
-	$wantedItems = [];
+function pushChallenge($id, $skills, $attendees,
+					   $goDeeper = true) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
-	foreach($_challenges as $i => $thing) {
-		if (in_array($thing->id, $wantedIDs)) {
-			array_push($wantedItems, $thing);
+	$returnable = false;
+	foreach($_challenges as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills = array_unique(array_merge($person->skills, $skills));
+			$person->attendees = array_unique(array_merge($person->attendees, $attendees));
+			
+			$returnable = $person;
 		}
 	}
 	
-	return json_encode($wantedItems);
+	$GLOBALS['challenges'] = json_encode($_challenges);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode(getReturnReady($returnable, $goDeeper));
 }
 
-function searchChallenges($searchPhrase, $where) {
+function popChallenge($id, $skills, $attendees,
+					  $goDeeper = true) {
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	$returnable = false;
+	foreach($_challenges as $i => $person) {
+		if ($person->id == $id) {
+			$person->skills = array_values(array_diff($person->skills, $skills));
+			$person->attendees = array_values(array_diff($person->attendees, $attendees));
+			
+			$returnable = $person;
+		}
+	}
+	
+	$GLOBALS['challenges'] = json_encode($_challenges);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode(getReturnReady($returnable, $goDeeper));
+}
+
+function deleteChallenge($ids,
+						 $goDeeper = true) {
+	$wantedIDs = explode(',', $ids);
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	$keeps = array();
+	$returnable = array();
+	foreach($_challenges as $i => $thing) {
+		if (in_array($thing->id, $wantedIDs))
+			array_push($returnable, $thing);
+		else 
+			array_push($keeps, $thing);
+	}
+	
+	$GLOBALS['challenges'] = json_encode($keeps);
+	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
+	return json_encode(getReturnReady($returnable, $goDeeper));
+}
+
+function findChallenges($ids, $where,
+						$goDeeper = true) {	
+	$params = [];
+	if ($where !== null) {
+		if (!empty($where)) {
+			$params = explode(';', $where);
+			for	($iii = 0; $iii < count($params); $iii++) {
+				$params[$iii] = explode(':', $params[$iii], 2);
+			}
+		}
+	}	
+	
+	$wantedIDs = explode(',', $ids);
+	$wantedItems = array();
+	$_challenges = json_decode($GLOBALS['challenges']);
+	
+	foreach($_challenges as $i => $challenge) {
+		$skip = false;
+		foreach	($params as $param) {
+			if (is_bool($challenge->{$param[0]})) {
+				if (json_decode($challenge->{$param[0]}) != json_decode($param[1])) {
+					$skip = true;
+					break;
+				}
+			} else {
+				if ($challenge->{$param[0]} != $param[1]) {
+					$skip = true;
+					break;
+				}
+			}
+		}
+		
+		if ($skip)
+			continue;
+		
+		if ($ids == "all" || in_array($challenge->id, $wantedIDs)) {
+			array_push($wantedItems, $challenge);
+		}
+	}
+	
+	return json_encode(getReturnReady($wantedItems, $goDeeper));
+}
+
+function searchChallenges($searchPhrase, $where,
+						  $goDeeper = true) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -236,10 +340,8 @@ function searchChallenges($searchPhrase, $where) {
 		}
 	}
 	
-	return json_encode($matches);
+	return json_encode(getReturnReady($matches, $goDeeper));
 }
-
-
 
 
 
