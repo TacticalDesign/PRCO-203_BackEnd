@@ -6,7 +6,7 @@ include_once("GetChallenges.php");
 
 $youngPeople = file_get_contents(youngPeopleFile);
 
-if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	include_once("CheckLoggedIn.php");
 	

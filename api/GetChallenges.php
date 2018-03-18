@@ -5,7 +5,7 @@ include_once("Tools.php");
 
 $challenges = file_get_contents(currentChallengesFile);
 
-if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	include_once("CheckLoggedIn.php");
 	
