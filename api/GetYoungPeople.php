@@ -1,7 +1,5 @@
 <?php
 
-include_once("CheckLoggedIn.php");
-
 include_once("Locations.php");
 include_once("Tools.php");
 include_once("GetChallenges.php");
@@ -9,6 +7,9 @@ include_once("GetChallenges.php");
 $youngPeople = file_get_contents(youngPeopleFile);
 
 if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+
+	include_once("CheckLoggedIn.php");
+	
 	$return = "false";
 	$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'attend', 'delete', 'find', 'search');
 	

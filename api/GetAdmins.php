@@ -1,13 +1,13 @@
 <?php
 
-include_once("CheckLoggedIn.php");
-
 include_once("Locations.php");
 include_once("Tools.php");
 
 $admins = file_get_contents(adminFile);
 
 if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+
+	include_once("CheckLoggedIn.php");
 	
 	$return = "false";
 	$keywords = array('new', 'edit', 'delete', 'find', 'search');

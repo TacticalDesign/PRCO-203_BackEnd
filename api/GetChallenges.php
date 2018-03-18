@@ -1,13 +1,14 @@
 <?php
 
-include_once("CheckLoggedIn.php");
-
 include_once("Locations.php");
 include_once("Tools.php");
 
 $challenges = file_get_contents(currentChallengesFile);
 
 if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
+
+	include_once("CheckLoggedIn.php");
+	
 	$return = "false";
 	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 

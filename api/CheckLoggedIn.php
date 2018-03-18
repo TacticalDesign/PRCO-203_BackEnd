@@ -2,6 +2,10 @@
 
 include_once("GetToken.php");
 
+include_once("GetAdmins.php");
+include_once("GetChallengers.php");
+include_once("GetYoungPeople.php");
+
 //If no JWT is given
 if (empty(apache_request_headers()['Authorization']))
 	killAll();
@@ -12,7 +16,7 @@ $data = apache_request_headers()['Authorization'];
 if (sizeof(explode(' ', $data)) === 2) {
 	$token = explode(' ', $data)[1];
 	
-	//Ensure the JWT is a header.payload.signature
+	//Ensure the JWT is in the header.payload.signature format
 	if (sizeof(explode('.', $token)) === 3) {
 		$tokenParts = explode('.', $token);
 		
@@ -20,18 +24,35 @@ if (sizeof(explode(' ', $data)) === 2) {
 		$correctSig = URLReady(base64_encode(hash_hmac('sha256', $tokenParts[0] . "." . $tokenParts[1], 'abC123!', true)));
 		
 		if ($correctSig !== $tokenParts[2])
-			killAll();
+			killAll("Incorrect JWT given!");
+		
+		//Check account isn't frozen
+		$checkPayload = str_replace(['-', '_', ''], ['+', '/', '='], $tokenParts[1]);
+		$userID = json_decode(base64_decode($checkPayload))->user_id;
+		
+		$matches = findAdmin($userID, null);
+		if (empty($matches))
+			$matches = findChallenger($userID, null);
+		if (empty($matches))
+			$matches = findYoungPerson($userID, null);
+		
+		if (!empty($matches)) {
+			if ($matches[0]->frozen)
+				killAll("Your account is frozen");
+		}
+		else
+			killAll("Account cannot be found");
 	}
 	else
-		killAll();
+		killAll("Incorrect JWT given!");
 }
 else 
-	killAll();
+	killAll("Incorrect JWT given!");
 	
 
 
-function killAll() {
-	echo json_encode(array('errors' => array("Incorrect JWT given!")));
+function killAll($message) {
+	echo json_encode(array('errors' => array($message)));
 	die();
 }
 

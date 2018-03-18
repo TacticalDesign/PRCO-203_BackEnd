@@ -4,6 +4,7 @@ include_once('Locations.php');
 include_once('GetToken.php');
 
 $response = array();
+$response['token'] = null;
 $response['errors'] = array();
 
 //Check the inputs
@@ -41,22 +42,6 @@ function checkUserBase($file, $accountType) {
 	}
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
