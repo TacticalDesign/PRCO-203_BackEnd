@@ -26,7 +26,7 @@ else
 
 
 function killAll() {
-	echo "Incorrect JWT given!";
+	echo json_encode(array('errors' => array("Incorrect JWT given!")));
 	die();
 }
 
