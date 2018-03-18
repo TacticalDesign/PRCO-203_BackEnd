@@ -116,7 +116,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//Return a value if needed
 	if (!empty($return))
-		echo $return;
+		echo json_encode(getReturnReady($return, true));
 }
 
 //Functions
@@ -124,8 +124,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 function createYoungPerson($frozen, $email, $password, $firstName,
 			               $surname, $balance, $skills, $interests,
-			               $currentChallenges, $archivedChallenges,
-					       $goDeeper = true) {
+			               $currentChallenges, $archivedChallenges) {
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
 	$returnable->frozen				= $frozen;
@@ -145,13 +144,12 @@ function createYoungPerson($frozen, $email, $password, $firstName,
 	array_push($_youngPeople, $returnable);
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
 function editYoungPerson($id, $frozen, $email, $password, $firstName,
 				         $surname, $balance, $skills, $interests,
-				         $currentChallenges, $archivedChallenges,
-				         $goDeeper = true) {
+				         $currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
 	$returnable = false;
@@ -184,12 +182,11 @@ function editYoungPerson($id, $frozen, $email, $password, $firstName,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
 function pushYoungPerson($id, $skills, $interests,
-				         $currentChallenges, $archivedChallenges,
-			             $goDeeper = true) {
+				         $currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
 	$returnable = false;
@@ -206,12 +203,11 @@ function pushYoungPerson($id, $skills, $interests,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
 function popYoungPerson($id, $skills, $interests,
-					    $currentChallenges, $archivedChallenges,
-				        $goDeeper = true) {
+					    $currentChallenges, $archivedChallenges) {
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
 	$returnable = false;
@@ -228,11 +224,10 @@ function popYoungPerson($id, $skills, $interests,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function feedbackYoungPerson($id, $challenge, $rating, $comment,
-				             $goDeeper = true) {
+function feedbackYoungPerson($id, $challenge, $rating, $comment) {
 	$feedback = new stdClass();
 	$feedback->challenge = $challenge;
 	$feedback->rating = $rating;
@@ -251,11 +246,10 @@ function feedbackYoungPerson($id, $challenge, $rating, $comment,
 	
 	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function attendYoungPerson($id, $challenge, $attending,
-				           $goDeeper = true) {
+function attendYoungPerson($id, $challenge, $attending) {
 	if ($attending) {
 		pushYoungPerson($id, array(), array(), array($challenge), array());
 		pushChallenge($challenge, array(), array($id));
@@ -264,11 +258,10 @@ function attendYoungPerson($id, $challenge, $attending,
 		popChallenge($challenge, array(), array($id));
 	}
 	
-	return getReturnReady(findYoungPerson($id, null), $goDeeper);
+	return findYoungPerson($id, null);
 }
 
-function deleteYoungPerson($ids,
-				           $goDeeper = true) {
+function deleteYoungPerson($ids) {
 	$wantedIDs = explode(',', $ids);
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
@@ -283,11 +276,10 @@ function deleteYoungPerson($ids,
 	
 	$GLOBALS['youngPeople'] = json_encode($keeps);
 	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function findYoungPerson($ids, $where,
-			             $goDeeper = true) {
+function findYoungPerson($ids, $where) {
 	
 	$params = [];
 	if ($where !== null) {
@@ -327,11 +319,10 @@ function findYoungPerson($ids, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($wantedUsers, $goDeeper));
+	return $wantedUsers;
 }
 
-function searchYoungPerson($searchPhrase, $where,
-				           $goDeeper = true) {
+function searchYoungPerson($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
@@ -385,7 +376,7 @@ function searchYoungPerson($searchPhrase, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($matches, $goDeeper));
+	return $matches;
 }
 
 

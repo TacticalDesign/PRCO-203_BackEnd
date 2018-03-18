@@ -91,17 +91,17 @@ function getObjReturnReady($data, $goDeeper) {
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = json_decode(findChallenger($data->challenger, null, false));
+			$results = findChallenger($data->challenger, null);
 			if (count($results) > 0)
 				$data->challenger = $results[0];
 		}
 		if (!empty($data->currentChallenges)) {
-			$results = json_decode(findChallenges(implode(',', $data->currentChallenges), null, false));
+			$results = findChallenges(implode(',', $data->currentChallenges), null);
 			if (count($results) > 0)
 				$data->currentChallenges = $results;
 		}
 		if (!empty($data->attendees)) {
-			$results = json_decode(findYoungPerson(implode(',', $data->attendees), null, false));
+			$results = findYoungPerson(implode(',', $data->attendees), null);
 			if (count($results) > 0)
 				$data->attendees = $results;
 		}

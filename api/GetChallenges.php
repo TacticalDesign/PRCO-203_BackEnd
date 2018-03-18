@@ -97,9 +97,8 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 	}
 	
 	//Return a value if needed
-	if (!empty($return)) {		
-		echo $return;
-	}
+	if (!empty($return))
+		echo json_encode(getReturnReady($return, true));
 }
 
 
@@ -109,8 +108,7 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 function createChallenge($frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees, $attendees,
-						 $goDeeper = true) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$returnable = new stdClass();
 	$returnable->id            = date("zyHis");
 	$returnable->frozen        = $frozen;
@@ -133,14 +131,13 @@ function createChallenge($frozen, $challenger, $adminApproved, $name,
 	array_push($_challenges, $returnable);
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode(getReturnReady($returnable, false));
+	return $returnable;
 }
 
 function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
-						 $closingTime, $minAttendees, $maxAttendees, $attendees,
-						 $goDeeper = true) {
+						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -179,11 +176,10 @@ function editChallenge($id, $frozen, $challenger, $adminApproved, $name,
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function pushChallenge($id, $skills, $attendees,
-					   $goDeeper = true) {
+function pushChallenge($id, $skills, $attendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -198,11 +194,10 @@ function pushChallenge($id, $skills, $attendees,
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function popChallenge($id, $skills, $attendees,
-					  $goDeeper = true) {
+function popChallenge($id, $skills, $attendees) {
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
 	$returnable = false;
@@ -217,11 +212,10 @@ function popChallenge($id, $skills, $attendees,
 	
 	$GLOBALS['challenges'] = json_encode($_challenges);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function deleteChallenge($ids,
-						 $goDeeper = true) {
+function deleteChallenge($ids) {
 	$wantedIDs = explode(',', $ids);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -236,11 +230,10 @@ function deleteChallenge($ids,
 	
 	$GLOBALS['challenges'] = json_encode($keeps);
 	file_put_contents(currentChallengesFile, $GLOBALS['challenges']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function findChallenges($ids, $where,
-						$goDeeper = true) {	
+function findChallenges($ids, $where) {
 	$params = [];
 	if ($where !== null) {
 		if (!empty($where)) {
@@ -279,11 +272,10 @@ function findChallenges($ids, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($wantedItems, $goDeeper));
+	return $wantedItems;
 }
 
-function searchChallenges($searchPhrase, $where,
-						  $goDeeper = true) {
+function searchChallenges($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_challenges = json_decode($GLOBALS['challenges']);
 	
@@ -340,7 +332,7 @@ function searchChallenges($searchPhrase, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($matches, $goDeeper));
+	return $matches;
 }
 
 

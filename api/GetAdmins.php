@@ -1,5 +1,7 @@
 <?php
 
+include_once("CheckLoggedIn.php");
+
 include_once("Locations.php");
 include_once("Tools.php");
 
@@ -63,14 +65,13 @@ if (__FILE__ == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	//Return a value if needed
 	if (!empty($return))
-		echo $return;
+		echo json_encode(getReturnReady($return, true));
 }
 
 //Functions
 //=========
 
-function createAdmin($frozen, $email, $password, $firstName, $surname,
-					 $goDeeper = true) {
+function createAdmin($frozen, $email, $password, $firstName, $surname) {
 	$returnable = new stdClass();
 	$returnable->id        = date("zyHis");
 	$returnable->frozen    = $frozen;
@@ -84,11 +85,10 @@ function createAdmin($frozen, $email, $password, $firstName, $surname,
 	array_push($_admins, $returnable);
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function editAdmin($id, $frozen, $email, $password, $firstName, $surname,
-				   $goDeeper = true) {
+function editAdmin($id, $frozen, $email, $password, $firstName, $surname) {
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
@@ -111,11 +111,10 @@ function editAdmin($id, $frozen, $email, $password, $firstName, $surname,
 	
 	$GLOBALS['admins'] = json_encode($_admins);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function deleteAdmin($ids,
-					 $goDeeper = true) {
+function deleteAdmin($ids) {
 	$wantedIDs = explode(',', $ids);
 	$_admins = json_decode($GLOBALS['admins']);
 	
@@ -130,11 +129,10 @@ function deleteAdmin($ids,
 	
 	$GLOBALS['admins'] = json_encode($keeps);
 	file_put_contents(adminFile, $GLOBALS['admins']);
-	return json_encode(getReturnReady($returnable, $goDeeper));
+	return $returnable;
 }
 
-function findAdmin($ids, $where,
-				   $goDeeper = true) {
+function findAdmin($ids, $where) {
 	
 	$params = [];
 	if ($where !== null) {
@@ -174,11 +172,10 @@ function findAdmin($ids, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($wantedUsers, $goDeeper));
+	return $wantedUsers;
 }
 
-function searchAdmin($searchPhrase, $where,
-					 $goDeeper = true) {
+function searchAdmin($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
 	$_admins = json_decode($GLOBALS['admins']);
 	
@@ -230,7 +227,7 @@ function searchAdmin($searchPhrase, $where,
 		}
 	}
 	
-	return json_encode(getReturnReady($matches, $goDeeper));
+	return $matches;
 }
 
 
