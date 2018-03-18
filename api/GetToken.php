@@ -1,10 +1,7 @@
 <?php
 
 function getToken($id, $accountType) {
-	// Create token header as a JSON string
 	$header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
-
-	// Create token payload as a JSON string
 	$payload = json_encode(['user_id' => $id, 'user_typ' => $accountType]);
 
 	// Encode Header to Base64Url String
