@@ -128,7 +128,7 @@ function createYoungPerson($email, $firstName) {
 		return null;
 	}
 	
-	$tempPassword = random_int(100000, 999999);
+	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
 	
 	$subject = "Welcome to the Dead Pencil's App!";
 	$props = array(
@@ -137,9 +137,14 @@ function createYoungPerson($email, $firstName) {
 		'{$name}' => $firstName
 	);
 	$message = strtr(file_get_contents(newAccountEmail), $props);
-	$headers = array('From' => 'NoReply@realideas.org');
+	$headers  = "From: NoReply@realideas.org;" . "\r\n";
+	$headers .= "MIME-Version: 1.0;" . "\r\n";
+	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
 	
-	mail($email, $subject, $message, $headers);
+	if(!mail($email, $subject, $message, $headers)) {
+		$GLOBALS['response']['errors'][] = "Unable to email new address";
+		die();
+	}
 	
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
