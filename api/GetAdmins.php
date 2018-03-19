@@ -97,7 +97,7 @@ function createAdmin($email, $firstName) {
 	$returnable->frozen       = false;
 	$returnable->email        = $email;
 	$returnable->password     = null;
-	$returnable->tempPassword = $tempPassword;
+	$returnable->tempPassword = password_hash($tempPassword, PASSWORD_BCRYPT);
 	$returnable->firstName    = $firstName;
 	$returnable->surname      = null;
 	$returnable->image        = profileFolder . "/" . $returnable->id . ".png";

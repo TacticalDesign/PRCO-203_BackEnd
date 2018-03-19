@@ -8,7 +8,7 @@ include_once("GetYoungPeople.php");
 
 //If no JWT is given
 if (empty(apache_request_headers()['Authorization']))
-	killAll();
+	killAll("No JWT given!");
 
 $data = apache_request_headers()['Authorization'];
 
