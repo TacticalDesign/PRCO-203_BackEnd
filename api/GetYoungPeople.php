@@ -9,8 +9,12 @@ $youngPeople = file_get_contents(youngPeopleFile);
 if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	include_once("CheckLoggedIn.php");
+
+	$response = array();
+	$response['result'] = null;
+	$response['count'] = 0;
+	$response['errors'] = array();
 	
-	$return = "false";
 	$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'attend', 'delete', 'find', 'search');
 	
 	//To create a new young person with a given email

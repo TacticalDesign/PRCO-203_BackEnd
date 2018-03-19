@@ -9,7 +9,11 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	include_once("CheckLoggedIn.php");
 
-	$return = "false";
+	$response = array();
+	$response['result'] = null;
+	$response['count'] = 0;
+	$response['errors'] = array();
+	
 	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 
 	//To create a new challenger with a given email

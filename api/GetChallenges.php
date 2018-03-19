@@ -8,8 +8,12 @@ $challenges = file_get_contents(currentChallengesFile);
 if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	include_once("CheckLoggedIn.php");
+
+	$response = array();
+	$response['result'] = null;
+	$response['count'] = 0;
+	$response['errors'] = array();
 	
-	$return = "false";
 	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
 
 	//To create a new challenge with a given name

@@ -8,16 +8,18 @@ $admins = file_get_contents(adminFile);
 if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
 
 	include_once("CheckLoggedIn.php");
+
+	$response = array();
+	$response['result'] = null;
+	$response['count'] = 0;
+	$response['errors'] = array();
 	
-	$return = "false";
 	$keywords = array('new', 'edit', 'delete', 'find', 'search');
 
 	//To create a new admin with a given email
 	if (onlyKeyword('new', $keywords)) {
-		$return = createAdmin(
-			getBool('frozen'),
+		$response['result'] = createAdmin(
 			getString('new'),
-			getEncrypted('password'),
 			getString('firstName'),
 			getString('surname')
 		);
@@ -26,7 +28,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To edit an existing admin with a given ID
 	else if (onlyKeyword('edit', $keywords) &&
 			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
-		$return = editAdmin(
+		$response['result'] = editAdmin(
 			getString('edit'),
 			getBool('frozen'),
 			getString('email'),
@@ -38,14 +40,14 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To delete an admin with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteAdmin(
+		$response['result'] = deleteAdmin(
 			getString('delete')
 		);
 	}
 
 	//To find only specific admins with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findAdmin(
+		$response['result'] = findAdmin(
 			getString('find'),
 			getString('where')
 		);
@@ -53,33 +55,48 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To search for admins with a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchAdmin(
+		$response['result'] = searchAdmin(
 			getString('search'),
 			getString('where')
 		);
 	}
 
 	else if (onlyKeyword('test', array('test'))) {
-		$return = json_encode(array('thing' => getBool('test')));
+		$response['result'] = json_encode(array('thing' => getBool('test')));
 	}
 
-	//Return a value if needed
-	if (!empty($return))
-		echo json_encode(getReturnReady($return, true));
+	//Return a value
+	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	echo json_encode(getReturnReady($response, true));
 }
 
 //Functions
 //=========
 
-function createAdmin($frozen, $email, $password, $firstName, $surname) {
+function createAdmin($email, $firstName, $surname) {
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+		return null;
+	}
+	
+	$tempPassword = random_int(100000, 999999);
+	
+	$subject = "Welcome to the Dead Pencil's App!";
+	$message = file_get_contents(newAccountEmail);
+	$headers = array('From' => 'NoReply@realideas.org');
+	
+	mail($email, $subject, $message, $headers);
+	
 	$returnable = new stdClass();
-	$returnable->id        = date("zyHis");
-	$returnable->frozen    = $frozen;
-	$returnable->email     = $email;
-	$returnable->password  = $password;
-	$returnable->firstName = $firstName;
-	$returnable->surname   = $surname;
-	$returnable->image     = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->id           = date("zyHis");
+	$returnable->frozen       = false;
+	$returnable->email        = $email;
+	$returnable->password     = null;
+	$returnable->tempPassword = $tempPassword;
+	$returnable->firstName    = $firstName;
+	$returnable->surname      = $surname;
+	$returnable->image        = profileFolder . "/" . $returnable->id . ".png";
 	
 	$_admins = json_decode($GLOBALS['admins']);
 	array_push($_admins, $returnable);
@@ -98,8 +115,10 @@ function editAdmin($id, $frozen, $email, $password, $firstName, $surname) {
 				$person->frozen = $frozen;
 			if ($email !== null)
 				$person->email = $email;
-			if ($password !== null)
+			if ($password !== null) {
 				$person->password = $password;
+				unset($person->tempPassword);
+			}
 			if ($firstName !== null)
 				$person->firstName = $firstName;
 			if ($surname !== null)

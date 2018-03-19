@@ -8,6 +8,8 @@ define("profileFolder", dataFolder . "/UserPhotos");
 
 define("coverPhotoFolder", dataFolder . "/CoverPhotos");
 
+define("emailsFolder", dataFolder . "/Emails");
+
 define("adminFile", dataFolder . "/Admins.json");
 
 define("challengerFile", dataFolder . "/Challengers.json");
@@ -15,6 +17,8 @@ define("challengerFile", dataFolder . "/Challengers.json");
 define("youngPeopleFile", dataFolder . "/YoungPeople.json");
 
 define("currentChallengesFile", dataFolder . "/CurrentChallenges.json");
+
+define("newAccountEmail", emailsFolder . "/NewAccountEmail.html");
 
 if (tokenSecret == false) {
 	echo json_encode(array('errors' => array("There is no server-side token secret!")));

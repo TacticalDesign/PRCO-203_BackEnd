@@ -28,6 +28,8 @@ function atLeastAll($values) {
 	return true;
 }
 
+//Get Types
+
 function getArray($array) {
 	if (empty($_GET[$array]))
 		return array();
@@ -75,19 +77,25 @@ function getBool($var) {
 	}
 }
 
-function getReturnReady($data, $goDeeper) {
+//End get Types
+
+function getReturnReady($returnable, $goDeeper) {
+	$data = $returnable['result'];
 	if (is_array($data)) {
 		foreach	($data as $i => $obj) {
 			$obj = getObjReturnReady($obj, $goDeeper);
 		}
-		return $data;
+		$returnable['result'] = $data;
 	}
 	else
-		return getObjReturnReady($data, $goDeeper);
+		$returnable['result'] = getObjReturnReady($data, $goDeeper);
+	
+	return $returnable;
 }
 
 function getObjReturnReady($data, $goDeeper) {
 	unset($data->password);
+	unset($data->tempPassword);
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
