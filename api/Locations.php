@@ -1,5 +1,7 @@
 <?php
 
+define('tokenSecret', json_decode(file_get_contents("../../TokenSecret.json"))->secret);
+
 define("dataFolder", "Data");
 
 define("profileFolder", dataFolder . "/UserPhotos");
@@ -13,6 +15,11 @@ define("challengerFile", dataFolder . "/Challengers.json");
 define("youngPeopleFile", dataFolder . "/YoungPeople.json");
 
 define("currentChallengesFile", dataFolder . "/CurrentChallenges.json");
+
+if (tokenSecret == false) {
+	echo json_encode(array('errors' => array("There is no server-side token secret!")));
+	die();
+}
 
 if (!file_exists(dataFolder)) {
     mkdir(dataFolder, 0600, true);

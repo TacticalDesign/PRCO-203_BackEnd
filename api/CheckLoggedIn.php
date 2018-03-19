@@ -1,7 +1,7 @@
 <?php
 
 include_once("GetToken.php");
-
+include_once("Locations.php");
 include_once("GetAdmins.php");
 include_once("GetChallengers.php");
 include_once("GetYoungPeople.php");
@@ -21,7 +21,7 @@ if (sizeof(explode(' ', $data)) === 2) {
 		$tokenParts = explode('.', $token);
 		
 		//Work out what the signature should be
-		$correctSig = URLReady(base64_encode(hash_hmac('sha256', $tokenParts[0] . "." . $tokenParts[1], 'abC123!', true)));
+		$correctSig = URLReady(base64_encode(hash_hmac('sha256', $tokenParts[0] . "." . $tokenParts[1], tokenSecret, true)));
 		
 		if ($correctSig !== $tokenParts[2])
 			killAll("Incorrect JWT given!");
