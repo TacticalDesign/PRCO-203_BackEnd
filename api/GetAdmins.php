@@ -60,12 +60,9 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 		);
 	}
 
-	else if (onlyKeyword('test', array('test'))) {
-		$response['result'] = json_encode(array('thing' => getBool('test')));
-	}
-
 	//Return a value
-	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	if (!empty($response['result']))
+		$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
 	echo json_encode(getReturnReady($response, true));
 }
 
@@ -73,6 +70,11 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 
 function createAdmin($email, $firstName) {
+	if (!isUserLevel('god')) {
+		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
+		return null;
+	}
+	
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
@@ -93,9 +95,17 @@ function createAdmin($email, $firstName) {
 	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
 	
 	if(!mail($email, $subject, $message, $headers)) {
-		$GLOBALS['response']['errors'][] = "Unable to email new address";
-		die();
+		echo "Unable to email new address";
+		/////////////////////////////////////////////////
+		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
+		if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1')))
+			echo $tempPassword;
+		/////////////////////////////////////////////////
+		else 
+			die();
 	}
+	else
+		echo "Sent Email";
 	
 	$returnable = new stdClass();
 	$returnable->id           = date("zyHis");
@@ -115,6 +125,11 @@ function createAdmin($email, $firstName) {
 }
 
 function editAdmin($id, $frozen, $email, $password, $firstName, $surname) {
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}	
+	
 	$_admins = json_decode($GLOBALS['admins']);
 	
 	$returnable = false;
@@ -143,6 +158,11 @@ function editAdmin($id, $frozen, $email, $password, $firstName, $surname) {
 }
 
 function deleteAdmin($ids) {
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
 	$wantedIDs = explode(',', $ids);
 	$_admins = json_decode($GLOBALS['admins']);
 	

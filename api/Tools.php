@@ -118,7 +118,25 @@ function getObjReturnReady($data, $goDeeper) {
 	return $data;
 }
 
-
+function isUserLevel($wantedLevel) {
+	$data = apache_request_headers()['Authorization'];
+	
+	//Ensure the JWT is two words
+	if (sizeof(explode(' ', $data)) === 2) {
+		$token = explode(' ', $data)[1];
+		
+		//Ensure the JWT is in the header.payload.signature format
+		if (sizeof(explode('.', $token)) === 3) {
+			$tokenParts = explode('.', $token);
+			
+			$checkPayload = str_replace(['-', '_', ''], ['+', '/', '='], $tokenParts[1]);
+			$userType = json_decode(base64_decode($checkPayload))->user_typ;
+			
+			return $wantedLevel === $userType;
+		}
+	}
+	return false;
+}
 
 
 

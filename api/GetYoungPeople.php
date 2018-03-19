@@ -122,6 +122,11 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 
 function createYoungPerson($email, $firstName) {
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
@@ -142,9 +147,17 @@ function createYoungPerson($email, $firstName) {
 	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
 	
 	if(!mail($email, $subject, $message, $headers)) {
-		$GLOBALS['response']['errors'][] = "Unable to email new address";
-		die();
+		echo "Unable to email new address";
+		/////////////////////////////////////////////////
+		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
+		if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1')))
+			echo $tempPassword;
+		/////////////////////////////////////////////////
+		else 
+			die();
 	}
+	else
+		echo "Sent Email";
 	
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
@@ -252,6 +265,11 @@ function popYoungPerson($id, $skills, $interests,
 }
 
 function feedbackYoungPerson($id, $challenge, $rating, $comment) {
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
+	}
+	
 	$feedback = new stdClass();
 	$feedback->challenge = $challenge;
 	$feedback->rating = $rating;
@@ -274,6 +292,11 @@ function feedbackYoungPerson($id, $challenge, $rating, $comment) {
 }
 
 function attendYoungPerson($id, $challenge, $attending) {
+	if (!isUserLevel('youngPerson')) {
+		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
+		return null;
+	}	
+	
 	if ($attending) {
 		pushYoungPerson($id, array(), array(), array($challenge), array());
 		pushChallenge($challenge, array(), array($id));
@@ -286,6 +309,11 @@ function attendYoungPerson($id, $challenge, $attending) {
 }
 
 function deleteYoungPerson($ids) {
+	if (!isUserLevel('youngPerson')) {
+		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
+		return null;
+	}	
+	
 	$wantedIDs = explode(',', $ids);
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
