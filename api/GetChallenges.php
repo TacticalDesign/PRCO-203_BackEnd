@@ -18,10 +18,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To create a new challenge with a given name
 	if (onlyKeyword('new', $keywords)) {
-		$return = createChallenge(
-			getBool('frozen'),
+		$response['result'] = createChallenge(
 			getString('challenger'),
-			getBool('adminApproved'),
 			getString('new'),
 			getArray('skills'),
 			getString('description'),
@@ -31,8 +29,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 			getString('location3'),
 			getString('closingTime'),
 			getInt('minAttendees'),
-			getInt('maxAttendees'),
-			getArray('attendees')
+			getInt('maxAttendees')
 		);
 	}
 
@@ -41,7 +38,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 			 atLeastOne(array('frozen', 'challenger', 'adminApproved', 'name', 'skills', 'description',
 							  'reward', 'location1', 'location2', 'location3', 'closingTime',
 							  'minAttendees', 'maxAttendees', 'attendees'))) {
-		$return = editChallenge(
+		$response['result'] = editChallenge(
 			getString('edit'),
 			getBool('frozen'),
 			getString('challenger'),
@@ -63,7 +60,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To push values to a challenges array contents
 	else if (onlyKeyword('push', $keywords) &&
 			 atLeastOne(array('skills', 'attendees'))) {
-		$return = pushChallenge(
+		$response['result'] = pushChallenge(
 			getString('push'),
 			getArray('skills'),
 			getArray('attendees')
@@ -73,7 +70,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To pop values from a challenges array contents
 	else if (onlyKeyword('pop', $keywords) &&
 			 atLeastOne(array('skills', 'attendees'))) {
-		$return = popChallenge(
+		$response['result'] = popChallenge(
 			getString('pop'),
 			getArray('skills'),
 			getArray('attendees')
@@ -82,14 +79,14 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To delete a challenge with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteChallenge(
+		$response['result'] = deleteChallenge(
 			getString('delete')
 		);
 	}
 
 	//To return only specific challenges with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findChallenges(
+		$response['result'] = findChallenges(
 			getString('find'),
 			getString('where')
 		);
@@ -97,30 +94,30 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To search for challenges with a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchChallenges(
+		$response['result'] = searchChallenges(
 			getString('search'),
 			getString('where')
 		);
 	}
 	
 	//Return a value if needed
-	if (!empty($return))
-		echo json_encode(getReturnReady($return, true));
+	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	echo json_encode(getReturnReady($response, true));
 }
 
 
 //Functions
 //=========
 
-function createChallenge($frozen, $challenger, $adminApproved, $name,
+function createChallenge($challenger, $name,
 						 $skills, $description, $reward,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$returnable = new stdClass();
 	$returnable->id            = date("zyHis");
-	$returnable->frozen        = $frozen;
+	$returnable->frozen        = false;
 	$returnable->challenger    = $challenger;
-	$returnable->adminApproved = $adminApproved;
+	$returnable->adminApproved = false;
 	$returnable->name          = $name;
 	$returnable->image         = profileFolder . "/" . $returnable->id . ".png";
 	$returnable->skills        = $skills;
@@ -132,7 +129,7 @@ function createChallenge($frozen, $challenger, $adminApproved, $name,
 	$returnable->closingTime   = $closingTime;
 	$returnable->minAttendees  = $minAttendees;
 	$returnable->maxAttendees  = $maxAttendees;
-	$returnable->attendees     = $attendees;
+	$returnable->attendees     = array();
 		
 	$_challenges = json_decode($GLOBALS['challenges']);
 	array_push($_challenges, $returnable);

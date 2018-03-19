@@ -20,8 +20,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	if (onlyKeyword('new', $keywords)) {
 		$response['result'] = createAdmin(
 			getString('new'),
-			getString('firstName'),
-			getString('surname')
+			getString('firstName')
 		);
 	}
 
@@ -73,7 +72,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //Functions
 //=========
 
-function createAdmin($email, $firstName, $surname) {
+function createAdmin($email, $firstName) {
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
@@ -83,7 +82,12 @@ function createAdmin($email, $firstName, $surname) {
 	$tempPassword = random_int(100000, 999999);
 	
 	$subject = "Welcome to the Dead Pencil's App!";
-	$message = file_get_contents(newAccountEmail);
+	$props = array(
+		'{$email}' => $email,
+		'{$tempPassword}' => $tempPassword,
+		'{$name}' => $firstName
+	);
+	$message = strtr(file_get_contents(newAccountEmail), $props);
 	$headers = array('From' => 'NoReply@realideas.org');
 	
 	mail($email, $subject, $message, $headers);
@@ -95,7 +99,7 @@ function createAdmin($email, $firstName, $surname) {
 	$returnable->password     = null;
 	$returnable->tempPassword = $tempPassword;
 	$returnable->firstName    = $firstName;
-	$returnable->surname      = $surname;
+	$returnable->surname      = null;
 	$returnable->image        = profileFolder . "/" . $returnable->id . ".png";
 	
 	$_admins = json_decode($GLOBALS['admins']);

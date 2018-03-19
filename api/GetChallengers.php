@@ -18,25 +18,20 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To create a new challenger with a given email
 	if (onlyKeyword('new', $keywords)) {
-		$return = createChallenger(
+		$response['result'] = createChallenger(
 			getString('new'),
-			getEncrypted('password'),
-			getString('name'),
-			getString('colour'),
-			getString('contactEmail'),
-			getString('contactPhone'),
-			getString('about'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+			getString('name')
 		);
 	}
 
 	//To edit an existing challenger with a given ID
 	else if (onlyKeyword('edit', $keywords) &&
-			 atLeastOne(array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone',
-						 'about', 'currentChallenges', 'archivedChallenges'))) {
-		$return = editChallenger(
+			 atLeastOne(array('frozen', 'email', 'password', 'name', 'colour',
+							  'contactEmail', 'contactPhone', 'about',
+							  'currentChallenges', 'archivedChallenges'))) {
+		$response['result'] = editChallenger(
 			getString('edit'),
+			getBool('frozen'),
 			getString('email'),
 			getEncrypted('password'),
 			getString('name'),
@@ -52,7 +47,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To push values to a young person's array contents
 	else if (onlyKeyword('push', $keywords) &&
 			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$return = pushChallenger(
+		$response['result'] = pushChallenger(
 			getString('push'),
 			getArray('currentChallenges'),
 			getArray('archivedChallenges')
@@ -62,7 +57,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To pop values from a young person's array contents
 	else if (onlyKeyword('pop', $keywords) &&
 			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$return = popChallenger(
+		$response['result'] = popChallenger(
 			getString('pop'),
 			getArray('currentChallenges'),
 			getArray('archivedChallenges')
@@ -71,14 +66,14 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To delete a challenger with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteChallenger(
+		$response['result'] = deleteChallenger(
 			getString('delete')
 		);
 	}
 
 	//To return only specific challengers with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findChallenger(
+		$response['result'] = findChallenger(
 			getString('find'),
 			getString('where')
 		);
@@ -86,36 +81,55 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To search for challengers with a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchChallenger(
+		$response['result'] = searchChallenger(
 			getString('search'),
 			getString('where')
 		);
 	}
 
 	//Return a value if needed
-	if (!empty($return))
-		echo json_encode(getReturnReady($return, true));
+	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	echo json_encode(getReturnReady($response, true));
 }
 
 //Functions
 //=========
 
-function createChallenger($email, $password, $name, $colour,
-					$contactEmail, $contactPhone, $about,
-					$currentChallenges, $archivedChallenges) {
+function createChallenger($email, $name) {
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+		return null;
+	}
+	
+	$tempPassword = random_int(100000, 999999);
+	
+	$subject = "Welcome to the Dead Pencil's App!";
+	$props = array(
+		'{$email}' => $email,
+		'{$tempPassword}' => $tempPassword,
+		'{$name}' => $name
+	);
+	$message = strtr(file_get_contents(newAccountEmail), $props);
+	$headers = array('From' => 'NoReply@realideas.org');
+	
+	mail($email, $subject, $message, $headers);
+	
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
+	$returnable->frozen             = false;
 	$returnable->email              = $email;
-	$returnable->password           = $password;
+	$returnable->password           = null;
+	$returnable->tempPassword       = $tempPassword;
 	$returnable->name               = $name;
 	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
 	$returnable->cover              = coverPhotoFolder . "/" . $returnable->id . ".png";
-	$returnable->colour             = $colour;
-	$returnable->contactEmail       = $contactEmail;
-	$returnable->contactPhone       = $contactPhone;
-	$returnable->about              = $about;
-	$returnable->currentChallenges  = $currentChallenges;
-	$returnable->archivedChallenges = $archivedChallenges;
+	$returnable->colour             = null;
+	$returnable->contactEmail       = null;
+	$returnable->contactPhone       = null;
+	$returnable->about              = null;
+	$returnable->currentChallenges  = array();
+	$returnable->archivedChallenges = array();
 	
 	$_challengers = json_decode($GLOBALS['challengers']);
 	array_push($_challengers, $returnable);
@@ -124,7 +138,7 @@ function createChallenger($email, $password, $name, $colour,
 	return $returnable;
 }
 
-function editChallenger($id, $email, $password, $name, $colour,
+function editChallenger($id, $frozen, $email, $password, $name, $colour,
 				  $contactEmail, $contactPhone, $about,
 				  $currentChallenges, $archivedChallenges) {
 	$_challengers = json_decode($GLOBALS['challengers']);
@@ -132,10 +146,14 @@ function editChallenger($id, $email, $password, $name, $colour,
 	$returnable = false;
 	foreach($_challengers as $i => $person) {
 		if ($person->id == $id) {
+			if ($frozen !== null)
+				$person->frozen = $frozen;
 			if ($email !== null)
 				$person->email = $email;
-			if ($password !== null)
+			if ($password !== null) {
 				$person->password = $password;
+				unset($person->tempPassword);
+			}
 			if ($name !== null)
 				$person->name = $name;
 			if ($colour !== null)

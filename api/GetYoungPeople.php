@@ -19,17 +19,9 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To create a new young person with a given email
 	if (onlyKeyword('new', $keywords)) {
-		$return = createYoungPerson(
-			getBool('frozen'),
+		$response['result'] = createYoungPerson(
 			getString('new'),
-			getEncrypted('password'),
-			getString('firstName'),
-			getString('surname'),
-			getInt('balance'),
-			getArray('skills'),
-			getArray('interests'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+			getString('firstName')
 		);
 	}
 
@@ -38,7 +30,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname',
 							  'balance', 'skills', 'interests', 'currentChallenges',
 							  'archivedChallenges'))) {
-		$return = editYoungPerson(
+		$response['result'] = editYoungPerson(
 			getString('edit'),
 			getBool('frozen'),
 			getString('email'),
@@ -56,7 +48,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To push values to a young person's array contents
 	else if (onlyKeyword('push', $keywords) &&
 			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-		$return = pushYoungPerson(
+		$response['result'] = pushYoungPerson(
 			getString('push'),
 			getArray('skills'),
 			getArray('interests'),
@@ -68,7 +60,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To pop values from a young person's array contents
 	else if (onlyKeyword('pop', $keywords) &&
 			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-		$return = popYoungPerson(
+		$response['result'] = popYoungPerson(
 			getString('pop'),
 			getArray('skills'),
 			getArray('interests'),
@@ -80,7 +72,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To add a new feedback to a young person with a given ID
 	else if (onlyKeyword('feedback', $keywords) &&
 			 atLeastAll(array('challenge', 'rating'))) {
-		$return = feedbackYoungPerson( 
+		$response['result'] = feedbackYoungPerson( 
 			getString('feedback'),
 			getString('challenge'),
 			getInt('rating'),
@@ -91,7 +83,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//To mark a young person with a given ID as attending a challenge
 	else if (onlyKeyword('attend', $keywords) &&
 			 atLeastAll(array('challenge', 'attending'))) {
-		$return = attendYoungPerson(
+		$response['result'] = attendYoungPerson(
 			getString('attend'),
 			getString('challenge'),
 			getBool('attending')
@@ -100,14 +92,14 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To delete a young person with a given ID
 	else if (onlyKeyword('delete', $keywords)) {
-		$return = deleteYoungPerson(
+		$response['result'] = deleteYoungPerson(
 			getString('delete')
 		);
 	}
 
 	//To return only specific young people with given IDs
 	else if (onlyKeyword('find', $keywords)) {
-		$return = findYoungPerson(
+		$response['result'] = findYoungPerson(
 			getString('find'),
 			getString('where')
 		);
@@ -115,36 +107,54 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To search all young people for a query
 	else if (onlyKeyword('search', $keywords)) {
-		$return = searchYoungPerson(
+		$response['result'] = searchYoungPerson(
 			getString('search'),
 			getString('where')
 		);
 	}
 
 	//Return a value if needed
-	if (!empty($return))
-		echo json_encode(getReturnReady($return, true));
+	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	echo json_encode(getReturnReady($response, true));
 }
 
 //Functions
 //=========
 
-function createYoungPerson($frozen, $email, $password, $firstName,
-			               $surname, $balance, $skills, $interests,
-			               $currentChallenges, $archivedChallenges) {
+function createYoungPerson($email, $firstName) {
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+		return null;
+	}
+	
+	$tempPassword = random_int(100000, 999999);
+	
+	$subject = "Welcome to the Dead Pencil's App!";
+	$props = array(
+		'{$email}' => $email,
+		'{$tempPassword}' => $tempPassword,
+		'{$name}' => $firstName
+	);
+	$message = strtr(file_get_contents(newAccountEmail), $props);
+	$headers = array('From' => 'NoReply@realideas.org');
+	
+	mail($email, $subject, $message, $headers);
+	
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
-	$returnable->frozen				= $frozen;
+	$returnable->frozen				= false;
 	$returnable->email              = $email;
-	$returnable->password           = $password;
+	$returnable->password           = null;
+	$returnable->tempPassword       = $tempPassword;
 	$returnable->firstName          = $firstName;
-	$returnable->surname            = $surname;
-	$returnable->balance			= $balance;
+	$returnable->surname            = null;
+	$returnable->balance			= 0;
 	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
-	$returnable->skills             = $skills;
-	$returnable->interests          = $interests;
-	$returnable->currentChallenges  = $currentChallenges;
-	$returnable->archivedChallenges = $archivedChallenges;
+	$returnable->skills             = array();
+	$returnable->interests          = array();
+	$returnable->currentChallenges  = array();
+	$returnable->archivedChallenges = array();
 	$returnable->feedbacks			= array();
 	
 	$_youngPeople = json_decode($GLOBALS['youngPeople']);
@@ -166,8 +176,10 @@ function editYoungPerson($id, $frozen, $email, $password, $firstName,
 				$person->frozen = $frozen;
 			if ($email !== null)
 				$person->email = $email;
-			if ($password !== null)
+			if ($password !== null) {
 				$person->password = $password;
+				unset($person->tempPassword);
+			}
 			if ($firstName !== null)
 				$person->firstName = $firstName;
 			if ($surname !== null)
