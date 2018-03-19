@@ -15,7 +15,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	$response['count'] = 0;
 	$response['errors'] = array();
 	
-	$keywords = array('new', 'edit', 'push', 'pop', 'feedback', 'attend', 'delete', 'find', 'search');
+	$keywords = array('new', 'edit', 'freeze', 'defrost', 'pay', 'charge',
+					  'feedback', 'attend', 'delete', 'find', 'search');
 	
 	//To create a new young person with a given email
 	if (onlyKeyword('new', $keywords)) {
@@ -27,45 +28,49 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To edit an existing young person at a given ID
 	else if (onlyKeyword('edit', $keywords) && 
-			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname',
-							  'balance', 'skills', 'interests', 'currentChallenges',
-							  'archivedChallenges'))) {
+			 atLeastOne(array('email', 'password', 'firstName', 'surname',
+							  'skills', 'interests'))) {
 		$response['result'] = editYoungPerson(
 			getString('edit'),
-			getBool('frozen'),
 			getString('email'),
 			getEncrypted('password'),
 			getString('firstName'),
 			getString('surname'),
-			getInt('balance'),
 			getArray('skills'),
-			getArray('interests'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+			getArray('interests')
 		);
 	}
-				
-	//To push values to a young person's array contents
-	else if (onlyKeyword('push', $keywords) &&
-			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-		$response['result'] = pushYoungPerson(
-			getString('push'),
-			getArray('skills'),
-			getArray('interests'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+	
+	//To freeze a young person
+	else if (onlyKeyword('freeze', $keywords) &&
+			 atLeastOne(array('id'))) {
+		$response['result'] = freezeYoungPerson(
+			getString('id')
 		);
 	}
-
-	//To pop values from a young person's array contents
-	else if (onlyKeyword('pop', $keywords) &&
-			 atLeastOne(array('skills', 'interests', 'currentChallenges', 'archivedChallenges'))) {
-		$response['result'] = popYoungPerson(
-			getString('pop'),
-			getArray('skills'),
-			getArray('interests'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+	
+	//To defrost a young person
+	else if (onlyKeyword('defrost', $keywords) &&
+			 atLeastOne(array('id'))) {
+		$response['result'] = defrostYoungPerson(
+			getString('id')
+		);
+	}
+	
+	//To pay a young person
+	else if (onlyKeyword('pay', $keywords) &&
+			 atLeastAll(array('id', 'pay'))) {
+		$response['result'] = payYoungPerson(
+			getString('id'),
+			getInt('pay')
+		);
+	}
+	
+	//To charge a young person
+	else if (onlyKeyword('charge', $keywords) &&
+			 atLeastOne(array('id'))) {
+		$response['result'] = chargeYoungPerson(
+			getString('id')
 		);
 	}
 
@@ -91,18 +96,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 
 	//To delete a young person with a given ID
-	else if (onlyKeyword('delete', $keywords)) {
-		$response['result'] = deleteYoungPerson(
-			getString('delete')
-		);
-	}
-
-	//To return only specific young people with given IDs
-	else if (onlyKeyword('find', $keywords)) {
-		$response['result'] = findYoungPerson(
-			getString('find'),
-			getString('where')
-		);
+	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+		$response['result'] = deleteYoungPerson();
 	}
 
 	//To search all young people for a query
@@ -114,7 +109,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 
 	//Return a value if needed
-	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	$response['count'] = empty($response['result']) ? 0 : 
+			is_array($response['result']) ? sizeof($response['result']) : 1;
 	echo json_encode(getReturnReady($response, true));
 }
 
@@ -122,19 +118,23 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 
 function createYoungPerson($email, $firstName) {
+	//Check the user is an admin
 	if (!isUserLevel('admin')) {
 		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
 		return null;
 	}
 	
+	//Check the given email is valid
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 		return null;
 	}
 	
+	//Generate a new temporary password 
 	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
 	
+	//Create and send an email with login details
 	$subject = "Welcome to the Dead Pencil's App!";
 	$props = array(
 		'{$email}' => $email,
@@ -159,6 +159,7 @@ function createYoungPerson($email, $firstName) {
 	else
 		echo "Sent Email";
 	
+	//Create the new young person
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
 	$returnable->frozen				= false;
@@ -175,217 +176,188 @@ function createYoungPerson($email, $firstName) {
 	$returnable->archivedChallenges = array();
 	$returnable->feedbacks			= array();
 	
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	array_push($_youngPeople, $returnable);
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	updateYoungPerson($returnable);
 	return $returnable;
 }
 
-function editYoungPerson($id, $frozen, $email, $password, $firstName,
-				         $surname, $balance, $skills, $interests,
-				         $currentChallenges, $archivedChallenges) {
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+function editYoungPerson($email, $password, $firstName,
+				         $surname, $skills, $interests) {
+	//Check the user is a young person
+	if (!isUserLevel('youngPerson')) {
+		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
+		return null;
+	}
 	
-	$returnable = false;
-	foreach($_youngPeople as $i => $person) {
-		if ($person->id == $id) {
-			if ($frozen !== null)
-				$person->frozen = $frozen;
-			if ($email !== null)
-				$person->email = $email;
-			if ($password !== null) {
-				$person->password = $password;
-				unset($person->tempPassword);
-			}
-			if ($firstName !== null)
-				$person->firstName = $firstName;
-			if ($surname !== null)
-				$person->surname = $surname;
-			if ($balance !== null)
-				$person->balance = $balance;
-			if ($skills !== null)
-				$person->skills = $skills;
-			if ($interests !== null)
-				$person->interests = $interests;
-			if ($currentChallenges !== null)
-				$person->currentChallenges = $currentChallenges;
-			if ($archivedChallenges !== null)
-				$person->archivedChallenges = $archivedChallenges;
-			
-			$returnable = $person;
+	//Check the given email is valid
+	if (!empty($email)) {
+		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+			return null;
 		}
 	}
 	
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return $returnable;
+	$id = getCurrentuserID();	
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	
+	if (!empty($email))
+		$returnable->email = $email;
+	if (!empty($password)) {
+		$returnable->password = $password;
+		unset($person->tempPassword);
+	}
+	if (!empty($firstName))
+		$returnable->firstName = $firstName;
+	if (!empty($surname))
+		$returnable->surname = $surname;
+	if (!empty($skills))
+		$returnable->skills = $skills;
+	if (!empty($interests))
+		$returnable->interests = $interests;
+	
+	updateYoungPerson($returnable);
+	return $returnable;	
 }
 
-function pushYoungPerson($id, $skills, $interests,
-				         $currentChallenges, $archivedChallenges) {
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	
-	$returnable = false;
-	foreach($_youngPeople as $i => $person) {
-		if ($person->id == $id) {
-			$person->skills             = array_unique(array_merge($person->skills, $skills));
-			$person->interests          = array_unique(array_merge($person->interests, $interests));
-			$person->currentChallenges  = array_unique(array_merge($person->currentChallenges, $currentChallenges));
-			$person->archivedChallenges = array_unique(array_merge($person->archivedChallenges, $archivedChallenges));
-			
-			$returnable = $person;
-		}
+function freezeYoungPerson($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
 	}
 	
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
-	return $returnable;
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->frozen = true;
+	
+	//Save the young person
+	updateYoungPerson($returnable);
+	return $returnable;	
 }
 
-function popYoungPerson($id, $skills, $interests,
-					    $currentChallenges, $archivedChallenges) {
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	
-	$returnable = false;
-	foreach($_youngPeople as $i => $person) {
-		if ($person->id == $id) {
-			$person->skills             = array_values(array_diff($person->skills, $skills));
-			$person->interests          = array_values(array_diff($person->interests, $interests));
-			$person->currentChallenges  = array_values(array_diff($person->currentChallenges, $currentChallenges));
-			$person->archivedChallenges = array_values(array_diff($person->archivedChallenges, $archivedChallenges));
-			
-			$returnable = $person;
-		}
+function defrostYoungPerson($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
 	}
 	
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->frozen = false;
+	
+	//Save the young person
+	updateYoungPerson($returnable);
 	return $returnable;
 }
 
-function feedbackYoungPerson($id, $challenge, $rating, $comment) {
+function payYoungPerson($id, $pay) {
+	//Check the user is a challenger
 	if (!isUserLevel('challenger')) {
 		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
 		return null;
 	}
 	
+	//Find and update the young person
+	$id = getCurrentuserID();
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->balance -= $debt;
+	
+	//Save the young person
+	updateYoungPerson($returnable);
+	return $returnable;
+}
+
+function chargeYoungPerson($debt) {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
+	}
+	
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->balance .= $pay;
+	
+	//Save the young person
+	updateYoungPerson($returnable);
+	return $returnable;
+}
+
+function feedbackYoungPerson($id, $challenge, $rating, $comment) {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
+	}
+	
+	//Create the feedback object
 	$feedback = new stdClass();
 	$feedback->challenge = $challenge;
 	$feedback->rating = $rating;
 	$feedback->comment = $comment;
 	
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->feedbacks[] = $feedback;
 	
-	$returnable = false;
-	foreach($_youngPeople as $i => $person) {
-		if ($person->id == $id) {
-			array_push($person->feedbacks, $feedback);
-			
-			$returnable = $person;
-		}
-	}
-	
-	$GLOBALS['youngPeople'] = json_encode($_youngPeople);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	//Save the young person
+	updateYoungPerson($returnable);
 	return $returnable;
 }
 
 function attendYoungPerson($id, $challenge, $attending) {
+	//Check the user is a young Person
 	if (!isUserLevel('youngPerson')) {
 		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
 		return null;
-	}	
+	}
+	
+	$id = getCurrentuserID();	
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
 	
 	if ($attending) {
-		pushYoungPerson($id, array(), array(), array($challenge), array());
-		pushChallenge($challenge, array(), array($id));
+		$returnable->currentChallenges[] = $challenge;
 	} else {
-		popYoungPerson($id, array(), array(), array($challenge), array());
-		popChallenge($challenge, array(), array($id));
+		if (($key = array_search($challenge, $returnable->currentChallenges)) !== false) {
+			unset($returnable->currentChallenges[$key]);
+		}
 	}
 	
-	return findYoungPerson($id, null);
-}
-
-function deleteYoungPerson($ids) {
-	if (!isUserLevel('youngPerson')) {
-		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
-		return null;
-	}	
-	
-	$wantedIDs = explode(',', $ids);
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_youngPeople as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
-	}
-	
-	$GLOBALS['youngPeople'] = json_encode($keeps);
-	file_put_contents(youngPeopleFile, $GLOBALS['youngPeople']);
+	//Save the young person
+	updateYoungPerson($returnable);
 	return $returnable;
 }
 
-function findYoungPerson($ids, $where) {
-	
-	$params = [];
-	if ($where !== null) {
-		if (!empty($where)) {
-			$params = explode(';', $where);
-			for	($iii = 0; $iii < count($params); $iii++) {
-				$params[$iii] = explode(':', $params[$iii], 2);
-			}
-		}
+function deleteYoungPerson() {
+	//Check the user is a young Person
+	if (!isUserLevel('youngPerson')) {
+		$GLOBALS['response']['errors'][] = "You have to be a young person to use this command";
+		return null;
 	}
 	
-	$wantedIDs = explode(',', $ids);
-	$wantedUsers = [];
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
+	$id = getCurrentuserID();
+	$youngPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	$returnable = $youngPeople[$id];
 	
-	foreach($_youngPeople as $i => $person) {
-		$skip = false;
-		foreach	($params as $param) {
-			if (is_bool($person->{$param[0]})) {
-				if (json_decode($person->{$param[0]}) != json_decode($param[1])) {
-					$skip = true;
-					break;
-				}
-			} else {
-				if ($person->{$param[0]} != $param[1]) {
-					$skip = true;
-					break;
-				}
-			}
-		}
-		
-		if ($skip)
-			continue;
-		
-		if ($ids == "all" || in_array($person->id, $wantedIDs)) {
-			array_push($wantedUsers, $person);
-		}
-	}
-	
-	return $wantedUsers;
+	unset($youngPeople[$id]);
+	file_put_contents(youngPeopleFile, json_encode($youngPeople));
+	return $returnable;
 }
 
 function searchYoungPerson($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
-	$_youngPeople = json_decode($GLOBALS['youngPeople']);
 	
-	$searchTerms = [];
+	//Find all the different sub-search terms
+	$searchTerms = array();
 	for ($i = strlen($searchPhrase); $i > 1; $i--) {
 		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
-			array_push($searchTerms, substr($searchPhrase, $ii, $i));
+			$searchTerms[] = substr($searchPhrase, $ii, $i);
 		}
 	}
 	
-	$params = [];
+	//Find all the fixed parameters
+	$params = array();
 	if (!empty($where)) {
 		$params = explode(';', $where);
 		for	($iii = 0; $iii < count($params); $iii++) {
@@ -393,11 +365,16 @@ function searchYoungPerson($searchPhrase, $where) {
 		}
 	}
 	
-	$matches = [];
-	$matchedIDs = [];
+	$youngPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	
+	$matches = array();
+	$matchedIDs = array();
+	
+	//For every search term
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
-			foreach ($_youngPeople as $ii => $person) {
+			//For every young person
+			foreach ($youngPeople as $ii => $person) {
 				$skip = false;
 				foreach	($params as $param) {
 					if (is_bool($person->{$param[0]})) {
@@ -434,7 +411,11 @@ function searchYoungPerson($searchPhrase, $where) {
 
 
 
-
+function updateYoungPerson($updated) {
+	$youngPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	$youngPeople[$updated->id] = $updated;
+	file_put_contents(youngPeopleFile, json_encode($youngPeople, JSON_PRETTY_PRINT));
+}
 
 
 

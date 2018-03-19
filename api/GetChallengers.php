@@ -14,7 +14,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	$response['count'] = 0;
 	$response['errors'] = array();
 	
-	$keywords = array('new', 'edit', 'push', 'pop', 'delete', 'find', 'search');
+	$keywords = array('new', 'edit', 'freeze', 'defrost', 'delete', 'search');
 
 	//To create a new challenger with a given email
 	if (onlyKeyword('new', $keywords)) {
@@ -26,57 +26,39 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 
 	//To edit an existing challenger with a given ID
 	else if (onlyKeyword('edit', $keywords) &&
-			 atLeastOne(array('frozen', 'email', 'password', 'name', 'colour',
-							  'contactEmail', 'contactPhone', 'about',
-							  'currentChallenges', 'archivedChallenges'))) {
+			 atLeastOne(array('email', 'password', 'name', 'colour',
+							  'contactEmail', 'contactPhone', 'about'))) {
 		$response['result'] = editChallenger(
 			getString('edit'),
-			getBool('frozen'),
 			getString('email'),
 			getEncrypted('password'),
 			getString('name'),
 			getString('colour'),
 			getString('contactEmail'),
 			getString('contactPhone'),
-			getString('about'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+			getString('about')
 		);
 	}
-				
-	//To push values to a young person's array contents
-	else if (onlyKeyword('push', $keywords) &&
-			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$response['result'] = pushChallenger(
-			getString('push'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+	
+	//To freeze a challenger
+	else if (onlyKeyword('freeze', $keywords) &&
+			 atLeastOne(array('id'))) {
+		$response['result'] = freezeChallenger(
+			getString('id')
 		);
 	}
-
-	//To pop values from a young person's array contents
-	else if (onlyKeyword('pop', $keywords) &&
-			 atLeastOne(array('currentChallenges', 'archivedChallenges'))) {
-		$response['result'] = popChallenger(
-			getString('pop'),
-			getArray('currentChallenges'),
-			getArray('archivedChallenges')
+	
+	//To defrost a challenger
+	else if (onlyKeyword('defrost', $keywords) &&
+			 atLeastOne(array('id'))) {
+		$response['result'] = defrostChallenger(
+			getString('id')
 		);
 	}
 
 	//To delete a challenger with a given ID
-	else if (onlyKeyword('delete', $keywords)) {
-		$response['result'] = deleteChallenger(
-			getString('delete')
-		);
-	}
-
-	//To return only specific challengers with given IDs
-	else if (onlyKeyword('find', $keywords)) {
-		$response['result'] = findChallenger(
-			getString('find'),
-			getString('where')
-		);
+	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+		$response['result'] = deleteChallenger();
 	}
 
 	//To search for challengers with a query
@@ -96,24 +78,28 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 
 function createChallenger($email, $name) {
+	//Check the user is an admin
 	if (!isUserLevel('admin')) {
 		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
 		return null;
 	}
 	
+	//Check the given email is valid
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 		return null;
 	}
 	
+	//Generate a new temporary password 
 	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
 	
+	//Create and send an email with login details
 	$subject = "Welcome to the Dead Pencil's App!";
 	$props = array(
 		'{$email}' => $email,
 		'{$tempPassword}' => $tempPassword,
-		'{$name}' => $name
+		'{$name}' => $firstName
 	);
 	$message = strtr(file_get_contents(newAccountEmail), $props);
 	$headers  = "From: NoReply@realideas.org;" . "\r\n";
@@ -133,6 +119,7 @@ function createChallenger($email, $name) {
 	else
 		echo "Sent Email";
 	
+	//Create the new challenger
 	$returnable = new stdClass();
 	$returnable->id                 = date("zyHis");
 	$returnable->frozen             = false;
@@ -149,164 +136,112 @@ function createChallenger($email, $name) {
 	$returnable->currentChallenges  = array();
 	$returnable->archivedChallenges = array();
 	
-	$_challengers = json_decode($GLOBALS['challengers']);
-	array_push($_challengers, $returnable);
-	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
+	updateChallenger($returnable);
 	return $returnable;
 }
 
-function editChallenger($id, $frozen, $email, $password, $name, $colour,
-				  $contactEmail, $contactPhone, $about,
-				  $currentChallenges, $archivedChallenges) {
-	$_challengers = json_decode($GLOBALS['challengers']);
-	
-	$returnable = false;
-	foreach($_challengers as $i => $person) {
-		if ($person->id == $id) {
-			if ($frozen !== null)
-				$person->frozen = $frozen;
-			if ($email !== null)
-				$person->email = $email;
-			if ($password !== null) {
-				$person->password = $password;
-				unset($person->tempPassword);
-			}
-			if ($name !== null)
-				$person->name = $name;
-			if ($colour !== null)
-				$person->colour = $colour;
-			if ($contactEmail !== null)
-				$person->contactEmail = $contactEmail;
-			if ($contactPhone !== null)
-				$person->contactPhone = $contactPhone;
-			if ($about !== null)
-				$person->about = $about;
-			if ($currentChallenges !== null)
-				$person->currentChallenges = $currentChallenges;
-			if ($archivedChallenges !== null)
-				$person->archivedChallenges = $archivedChallenges;
-			
-			$returnable = $person;
-		}
-	}
-	
-	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return $returnable;
-}
-
-function pushChallenger($id, $currentChallenges, $archivedChallenges) {
-	$_challengers = json_decode($GLOBALS['challengers']);
-	
-	$returnable = false;
-	foreach($_challengers as $i => $person) {
-		if ($person->id == $id) {
-			$person->currentChallenges = array_unique(array_merge($person->currentChallenges, $currentChallenges));
-			$person->archivedChallenges = array_unique(array_merge($person->archivedChallenges, $archivedChallenges));
-			
-			$returnable = $person;
-		}
-	}
-	
-	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return $returnable;
-}
-
-function popChallenger($id, $currentChallenges, $archivedChallenges) {
-	$_challengers = json_decode($GLOBALS['challengers']);
-	
-	$returnable = false;
-	foreach($_challengers as $i => $person) {
-		if ($person->id == $id) {
-			$person->currentChallenges = array_values(array_diff($person->currentChallenges, $currentChallenges));
-			$person->archivedChallenges = array_values(array_diff($person->archivedChallenges, $archivedChallenges));
-			
-			$returnable = $person;
-		}
-	}
-	
-	$GLOBALS['challengers'] = json_encode($_challengers);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
-	return $returnable;
-}
-
-function deleteChallenger($ids) {
+function editChallenger($email, $password, $name, $colour,
+						$contactEmail, $contactPhone, $about) {
+	//Check the user is a challenger
 	if (!isUserLevel('challenger')) {
 		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
 		return null;
-	}	
-	
-	$wantedIDs = explode(',', $ids);
-	$_challengers = json_decode($GLOBALS['challengers']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_challengers as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
 	}
 	
-	$GLOBALS['challengers'] = json_encode($keeps);
-	file_put_contents(challengerFile, $GLOBALS['challengers']);
+	//Check the given email is valid
+	if (!empty($email)) {
+		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+			return null;
+		}
+	}
+	
+	$id = getCurrentuserID();	
+	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
+	
+	if ($email !== null)
+		$returnable->email = $email;
+	if ($password !== null) {
+		$returnable->password = $password;
+		unset($returnable->tempPassword);
+	}
+	if ($name !== null)
+		$returnable->name = $name;
+	if ($colour !== null)
+		$returnable->colour = $colour;
+	if ($contactEmail !== null)
+		$returnable->contactEmail = $contactEmail;
+	if ($contactPhone !== null)
+		$returnable->contactPhone = $contactPhone;
+	if ($about !== null)
+		$returnable->about = $about;
+	
+	updateChallenger($returnable);
+	return $returnable;	
+}
+
+function freezeChallenger($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
+	//Find and update the challenger
+	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
+	$returnable->frozen = true;
+	
+	//Save the challenger
+	updateChallenger($returnable);
+	return $returnable;	
+}
+
+function defrostChallenger($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
+	//Find and update the challenger
+	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
+	$returnable->frozen = false;
+	
+	//Save the challenger
+	updateChallenger($returnable);
 	return $returnable;
 }
 
-function findChallenger($ids, $where) {
-	$params = [];
-	if ($where !== null) {
-		if (!empty($where)) {
-			$params = explode(';', $where);
-			for	($iii = 0; $iii < count($params); $iii++) {
-				$params[$iii] = explode(':', $params[$iii], 2);
-			}
-		}
+function deleteChallenger() {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
 	}
 	
-	$wantedIDs = explode(',', $ids);
-	$wantedUsers = array();
-	$_challengers = json_decode($GLOBALS['challengers']);
+	$id = getCurrentuserID();
+	$challengers = json_decode(file_get_contents(challengerFile), true);
+	$returnable = $challengers[$id];
 	
-	foreach($_challengers as $i => $person) {
-		$skip = false;
-		foreach	($params as $param) {
-			if (is_bool($person->{$param[0]})) {
-				if (json_decode($person->{$param[0]}) != json_decode($param[1])) {
-					$skip = true;
-					break;
-				}
-			} else {
-				if ($person->{$param[0]} != $param[1]) {
-					$skip = true;
-					break;
-				}
-			}
-		}
-		
-		if ($skip)
-			continue;
-		
-		if ($ids == "all" || in_array($person->id, $wantedIDs))
-			array_push($wantedUsers, $person);
-	}
-	return $wantedUsers;
+	unset($challengers[$id]);
+	file_put_contents(challengerFile, json_encode($challengers));
+	return $returnable;
 }
 
 function searchChallenger($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
-	$_challengers = json_decode($GLOBALS['challengers']);
 	
-	$searchTerms = [];
+	//Find all the different sub-search terms
+	$searchTerms = array();
 	for ($i = strlen($searchPhrase); $i > 1; $i--) {
 		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
 			array_push($searchTerms, substr($searchPhrase, $ii, $i));
 		}
 	}
 	
-	$params = [];
+	//Find all the fixed parameters
+	$params = array();
 	if (!empty($where)) {
 		$params = explode(';', $where);
 		for	($iii = 0; $iii < count($params); $iii++) {
@@ -314,11 +249,16 @@ function searchChallenger($searchPhrase, $where) {
 		}
 	}
 	
-	$matches = [];
-	$matchedIDs = [];
+	$challengers = json_decode(file_get_contents(youngPeopleFile), true);
+	
+	$matches = array();
+	$matchedIDs = array();
+	
+	//For every search term
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
-			foreach ($_challengers as $ii => $person) {
+			//For every challenger
+			foreach ($challengers as $ii => $person) {
 				$skip = false;
 				foreach	($params as $param) {
 					if (is_bool($person->{$param[0]})) {
@@ -354,6 +294,11 @@ function searchChallenger($searchPhrase, $where) {
 
 
 
+function updateChallenger($updated) {
+	$challengers = json_decode(file_get_contents(challengerFile), true);
+	$challengers[$updated->id] = $updated;
+	file_put_contents(challengerFile, json_encode($challengers, JSON_PRETTY_PRINT));
+}
 
 
 

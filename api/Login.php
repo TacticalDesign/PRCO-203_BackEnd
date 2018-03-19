@@ -18,6 +18,13 @@ if (empty($_POST['password']))
 
 //If no errors have been made so far
 if (sizeof($response['errors']) === 0) {
+	//Check for god account
+	if ($_POST['email'] === godUser && $_POST['password'] === godPassword) {
+		$GLOBALS['response']['token'] = GetToken("000", "god");
+		echo json_encode($GLOBALS['response']);
+		die();
+	}
+	
 	//Check each user-base for a matching account
 	if (!checkUserBase(adminFile, 'admin'))
 		if (!checkUserBase(challengerFile, 'challenger'))
@@ -49,18 +56,43 @@ function checkUserBase($file, $accountType) {
 			if (password_verify($_POST['tempPassword'], $user->tempPassword)) {
 				switch ($accountType) {
 					case 'admin':
-						editAdmin($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null);
+						//Read all admins
+						$allUsers = json_decode(file_get_contents(adminFile));
+						//Find the wanted one
+						$foundUser = $allUsers->{$user->id};
+						//Adjust the password settings
+						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+						unset($foundUser->tempPassword);
+						//Re-add the wanted admin back in
+						$allUsers->{$user->id} = $foundUser;
+						file_put_contents(adminFile, json_encode($allUsers, JSON_PRETTY_PRINT));
 						break;
 					case 'challenger':
-						editChallenger($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null,
-						null, null, null, null, null);
+						//Read all challengers
+						$allUsers = json_decode(file_get_contents(challengerFile));
+						//Find the wanted one
+						$foundUser = $allUsers->{$user->id};
+						//Adjust the password settings
+						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+						unset($foundUser->tempPassword);
+						//Re-add the wanted challenger back in
+						$allUsers->{$user->id} = $foundUser;
+						file_put_contents(challengerFile, json_encode($allUsers, JSON_PRETTY_PRINT));
 						break;
 					case 'youngPerson':
-						editYoungPerson($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null,
-						null, null, null, null, null);
+						//Read all young people
+						$allUsers = json_decode(file_get_contents());
+						//Find the wanted one
+						$foundUser = $allUsers->{$user->id};
+						//Adjust the password settings
+						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+						unset($foundUser->tempPassword);
+						//Re-add the wanted young person back in
+						$allUsers->{$user->id} = $foundUser;
+						file_put_contents(youngPeopleFile, json_encode($allUsers, JSON_PRETTY_PRINT));
 						break;
 				}
-				$GLOBALS['response']['token'] = GetToken($users[0]->id, $accountType);
+				$GLOBALS['response']['token'] = GetToken($foundUser->id, $accountType);
 				return true;
 			}
 			else{
@@ -70,7 +102,7 @@ function checkUserBase($file, $accountType) {
 		}
 		
 		if (password_verify($_POST['password'], $user->password))
-			$GLOBALS['response']['token'] = GetToken($users[0]->id, $accountType);
+			$GLOBALS['response']['token'] = GetToken($user->id, $accountType);
 		else
 			$GLOBALS['response']['errors'][] = "Password is incorrect";
 		

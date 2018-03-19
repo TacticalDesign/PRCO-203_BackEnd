@@ -38,18 +38,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 
 	//To delete an admin with a given ID
-	else if (onlyKeyword('delete', $keywords)) {
-		$response['result'] = deleteAdmin(
-			getString('delete')
-		);
-	}
-
-	//To find only specific admins with given IDs
-	else if (onlyKeyword('find', $keywords)) {
-		$response['result'] = findAdmin(
-			getString('find'),
-			getString('where')
-		);
+	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+		$response['result'] = deleteAdmin();
 	}
 
 	//To search for admins with a query
@@ -70,19 +60,23 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 
 function createAdmin($email, $firstName) {
+	//Check the user is an god
 	if (!isUserLevel('god')) {
 		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
 		return null;
 	}
 	
+	//Check the given email is valid
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 		return null;
 	}
 	
+	//Generate a new temporary password 
 	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
 	
+	//Create and send an email with login details
 	$subject = "Welcome to the Dead Pencil's App!";
 	$props = array(
 		'{$email}' => $email,
@@ -117,124 +111,105 @@ function createAdmin($email, $firstName) {
 	$returnable->surname      = null;
 	$returnable->image        = profileFolder . "/" . $returnable->id . ".png";
 	
-	$_admins = json_decode($GLOBALS['admins']);
-	array_push($_admins, $returnable);
-	$GLOBALS['admins'] = json_encode($_admins);
-	file_put_contents(adminFile, $GLOBALS['admins']);
+	updateAdmin($returnable);
 	return $returnable;
 }
 
-function editAdmin($id, $frozen, $email, $password, $firstName, $surname) {
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}	
-	
-	$_admins = json_decode($GLOBALS['admins']);
-	
-	$returnable = false;
-	foreach($_admins as $i => $person) {
-		if ($person->id == $id) {
-			if ($frozen !== null)
-				$person->frozen = $frozen;
-			if ($email !== null)
-				$person->email = $email;
-			if ($password !== null) {
-				$person->password = $password;
-				unset($person->tempPassword);
-			}
-			if ($firstName !== null)
-				$person->firstName = $firstName;
-			if ($surname !== null)
-				$person->surname = $surname;
-			
-			$returnable = $person;
-		}
-	}
-	
-	$GLOBALS['admins'] = json_encode($_admins);
-	file_put_contents(adminFile, $GLOBALS['admins']);
-	return $returnable;
-}
-
-function deleteAdmin($ids) {
+function editAdmin($email, $password, $firstName, $surname) {
+	//Check the user is an admin
 	if (!isUserLevel('admin')) {
 		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
 		return null;
 	}
 	
-	$wantedIDs = explode(',', $ids);
-	$_admins = json_decode($GLOBALS['admins']);
-	
-	$keeps = array();
-	$returnable = array();
-	foreach($_admins as $i => $person) {
-		if (in_array($person->id, $wantedIDs)) {
-			array_push($returnable, $person);
-		} else 
-			array_push($keeps, $person);
+	//Check the given email is valid
+	if (!empty($email)) {
+		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+			return null;
+		}
 	}
 	
-	$GLOBALS['admins'] = json_encode($keeps);
-	file_put_contents(adminFile, $GLOBALS['admins']);
+	$id = getCurrentuserID();
+	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	
+	if ($email !== null)
+		$returnable->email = $email;
+	if ($password !== null) {
+		$returnable->password = $password;
+		unset($returnable->tempPassword);
+	}
+	if ($firstName !== null)
+		$returnable->firstName = $firstName;
+	if ($surname !== null)
+		$returnable->surname = $surname;
+	
+	updateYoungPerson($returnable);
 	return $returnable;
 }
 
-function findAdmin($ids, $where) {
-	
-	$params = [];
-	if ($where !== null) {
-		if (!empty($where)) {
-			$params = explode(';', $where);
-			for	($iii = 0; $iii < count($params); $iii++) {
-				$params[$iii] = explode(':', $params[$iii], 2);
-			}
-		}
+function freezeAdmin($id) {
+	//Check the user is a god
+	if (!isUserLevel('got')) {
+		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
+		return null;
 	}
 	
-	$wantedIDs = explode(',', $ids);
-	$wantedUsers = [];
-	$_admins = json_decode($GLOBALS['admins']);
+	//Find and update the admin
+	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	$returnable->frozen = true;
 	
-	foreach($_admins as $i => $person) {
-		$skip = false;
-		foreach	($params as $param) {
-			if (is_bool($person->{$param[0]})) {
-				if (json_decode($person->{$param[0]}) != json_decode($param[1])) {
-					$skip = true;
-					break;
-				}
-			} else {
-				if ($person->{$param[0]} != $param[1]) {
-					$skip = true;
-					break;
-				}
-			}
-		}
-		
-		if ($skip)
-			continue;
-		
-		if ($ids == "all" || in_array($person->id, $wantedIDs)) {
-			array_push($wantedUsers, $person);
-		}
+	//Save the admin
+	updateAdmin($returnable);
+	return $returnable;	
+}
+
+function defrostAdmin($id) {
+	//Check the user is a god
+	if (!isUserLevel('god')) {
+		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
+		return null;
 	}
 	
-	return $wantedUsers;
+	//Find and update the admin
+	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	$returnable->frozen = false;
+	
+	//Save the admin
+	updateAdmin($returnable);
+	return $returnable;
+}
+
+function deleteAdmin() {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
+	$id = getCurrentuserID();
+	$admins = json_decode(file_get_contents(adminFile), true);
+	$returnable = $admins[$id];
+	
+	unset($admins[$id]);
+	file_put_contents(adminFile, json_encode($admins));
+	return $returnable;
 }
 
 function searchAdmin($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
-	$_admins = json_decode($GLOBALS['admins']);
 	
-	$searchTerms = [];
+	//Find all the different sub-search terms
+	$searchTerms = array();
 	for ($i = strlen($searchPhrase); $i > 1; $i--) {
 		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
 			array_push($searchTerms, substr($searchPhrase, $ii, $i));
 		}
 	}
 	
-	$params = [];
+	//Find all the fixed parameters
+	$params = array();
 	if (!empty($where)) {
 		$params = explode(';', $where);
 		for	($iii = 0; $iii < count($params); $iii++) {
@@ -242,10 +217,15 @@ function searchAdmin($searchPhrase, $where) {
 		}
 	}
 	
-	$matches = [];
-	$matchedIDs = [];
+	$admins = json_decode(file_get_contents(adminFile), true);
+	
+	$matches = array();
+	$matchedIDs = array();
+	
+	//For every search term
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
+			//For every young person
 			foreach ($_admins as $ii => $person) {
 				$skip = false;
 				foreach	($params as $param) {
@@ -281,12 +261,11 @@ function searchAdmin($searchPhrase, $where) {
 
 
 
-
-
-
-
-
-
+function updateAdmin($updated) {
+	$admins = json_decode(file_get_contents(adminFile), true);
+	$admins[$updated->id] = $updated;
+	file_put_contents(adminFile, json_encode($admins, JSON_PRETTY_PRINT));
+}
 
 
 

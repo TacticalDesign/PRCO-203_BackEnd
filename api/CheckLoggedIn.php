@@ -26,22 +26,28 @@ if (sizeof(explode(' ', $data)) === 2) {
 		if ($correctSig !== $tokenParts[2])
 			killAll("Incorrect JWT given!");
 		
-		//Check account isn't frozen
 		$checkPayload = str_replace(['-', '_', ''], ['+', '/', '='], $tokenParts[1]);
-		$userID = json_decode(base64_decode($checkPayload))->user_id;
 		
-		$matches = findAdmin($userID, null);
-		if (empty($matches))
-			$matches = findChallenger($userID, null);
-		if (empty($matches))
-			$matches = findYoungPerson($userID, null);
+		if (json_decode(base64_decode($checkPayload))->user_typ !== 'god') {
 		
-		if (!empty($matches)) {
-			if ($matches[0]->frozen)
-				killAll("Your account is frozen");
+			$userID = json_decode(base64_decode($checkPayload))->user_id;
+			
+			if (array_key_exists($userID, json_decode(file_get_contents(adminFile), true)))
+				$match = json_decode(file_get_contents(adminFile), true)[$userID];
+			if (array_key_exists($userID, json_decode(file_get_contents(challengerFile), true)))
+				$match = json_decode(file_get_contents(challengerFile), true)[$userID];
+			if (array_key_exists($userID, json_decode(file_get_contents(youngPeopleFile), true)))
+				$match = json_decode(file_get_contents(youngPeopleFile), true)[$userID];
+			
+			
+			//Check account isn't frozen
+			if (!empty($match)) {
+				if ($match->frozen)
+					killAll("Your account is frozen");
+			}
+			else
+				killAll("Account cannot be found");
 		}
-		else
-			killAll("Account cannot be found");
 	}
 	else
 		killAll("Incorrect JWT given!");

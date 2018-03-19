@@ -1,6 +1,8 @@
 <?php
 
 define('tokenSecret', json_decode(file_get_contents("../../TokenSecret.json"))->secret);
+define('godUser', json_decode(file_get_contents("../../TokenSecret.json"))->godUser);
+define('godPassword', json_decode(file_get_contents("../../TokenSecret.json"))->godPassword);
 
 define("dataFolder", "Data");
 
