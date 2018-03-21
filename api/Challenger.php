@@ -77,6 +77,46 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //Functions
 //=========
 
+function payYoungPerson($id, $pay) {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
+	}
+	
+	//Find and update the young person
+	$id = getCurrentuserID();
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->balance .= $pay;
+	
+	//Save the young person
+	setYoungPerson($returnable);
+	return $returnable;
+}
+
+function feedbackYoungPerson($id, $challenge, $rating, $comment) {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
+		return null;
+	}
+	
+	//Create the feedback object
+	$feedback = new stdClass();
+	$feedback->challenge = $challenge;
+	$feedback->rating = $rating;
+	$feedback->comment = $comment;
+	
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->feedbacks[] = $feedback;
+	
+	//Save the young person
+	setYoungPerson($returnable);
+	return $returnable;
+}
+
+
 function createChallenger($email, $name) {
 	//Check the user is an admin
 	if (!isUserLevel('admin')) {

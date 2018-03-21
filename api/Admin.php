@@ -59,10 +59,10 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //Functions
 //=========
 
-function createAdmin($email, $firstName) {
-	//Check the user is an god
-	if (!isUserLevel('god')) {
-		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
+function createYoungPerson($email, $firstName) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
 		return null;
 	}
 	
@@ -101,19 +101,123 @@ function createAdmin($email, $firstName) {
 	else
 		echo "Sent Email";
 	
+	//Create the new young person
 	$returnable = new stdClass();
-	$returnable->id           = date("zyHis");
-	$returnable->frozen       = false;
-	$returnable->email        = $email;
-	$returnable->password     = null;
-	$returnable->tempPassword = password_hash($tempPassword, PASSWORD_BCRYPT);
-	$returnable->firstName    = $firstName;
-	$returnable->surname      = null;
-	$returnable->image        = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->id                 = date("zyHis");
+	$returnable->frozen				= false;
+	$returnable->email              = $email;
+	$returnable->password           = null;
+	$returnable->tempPassword       = $tempPassword;
+	$returnable->firstName          = $firstName;
+	$returnable->surname            = null;
+	$returnable->balance			= 0;
+	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->skills             = array();
+	$returnable->interests          = array();
+	$returnable->currentChallenges  = array();
+	$returnable->archivedChallenges = array();
+	$returnable->feedbacks			= array();
 	
-	updateAdmin($returnable);
+	setYoungPerson($returnable);
 	return $returnable;
 }
+
+function freezeYoungPerson($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->frozen = true;
+	
+	//Save the young person
+	setYoungPerson($returnable);
+	return $returnable;	
+}
+
+function defrostYoungPerson($id) {
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+		return null;
+	}
+	
+	//Find and update the young person
+	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable->frozen = false;
+	
+	//Save the young person
+	setYoungPerson($returnable);
+	return $returnable;
+}
+
+function searchYoungPerson($searchPhrase, $where) {
+	$searchPhrase = strtolower($searchPhrase);
+	
+	//Find all the different sub-search terms
+	$searchTerms = array();
+	for ($i = strlen($searchPhrase); $i > 1; $i--) {
+		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
+			$searchTerms[] = substr($searchPhrase, $ii, $i);
+		}
+	}
+	
+	//Find all the fixed parameters
+	$params = array();
+	if (!empty($where)) {
+		$params = explode(';', $where);
+		for	($iii = 0; $iii < count($params); $iii++) {
+			$params[$iii] = explode(':', $params[$iii], 2);
+		}
+	}
+	
+	$youngPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	
+	$matches = array();
+	$matchedIDs = array();
+	
+	//For every search term
+	foreach ($searchTerms as $i => $term) {
+		if (!empty($term)) {
+			//For every young person
+			foreach ($youngPeople as $ii => $person) {
+				$skip = false;
+				foreach	($params as $param) {
+					if (is_bool($person->{$param[0]})) {
+						if (json_decode($person->{$param[0]}) != json_decode($param[1])) {
+							$skip = true;
+							break;
+						}
+					} else {
+						if ($person->{$param[0]} != $param[1]) {
+							$skip = true;
+							break;
+						}
+					}
+				}
+				
+				if ($skip)
+					continue;
+				
+				if ((strpos(strtolower($person->firstName), $term) !== false
+							  || strpos(strtolower($person->surname), $term) !== false
+							  || strpos(strtolower(implode("|", $person->skills)), $term) !== false
+							  || strpos(strtolower(implode("|", $person->interests)), $term) !== false)
+							  && !in_array($person->id, $matchedIDs)) {
+					array_push($matches, $person);
+					array_push($matchedIDs, $person->id);
+				}
+			}
+		}
+	}
+	
+	return $matches;
+}
+
+
 
 function editAdmin($email, $password, $firstName, $surname) {
 	//Check the user is an admin
@@ -145,7 +249,7 @@ function editAdmin($email, $password, $firstName, $surname) {
 	if ($surname !== null)
 		$returnable->surname = $surname;
 	
-	updateYoungPerson($returnable);
+	setYoungPerson($returnable);
 	return $returnable;
 }
 

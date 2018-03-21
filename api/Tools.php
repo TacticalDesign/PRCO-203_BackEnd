@@ -138,6 +138,8 @@ function isUserLevel($wantedLevel) {
 	return false;
 }
 
+// Getter and Setters
+
 function getCurrentUserID() {
 	$data = apache_request_headers()['Authorization'];
 	
@@ -156,7 +158,35 @@ function getCurrentUserID() {
 	return false;
 }
 
+function setAdmin($updated) {
+	$youngPeople = json_decode(file_get_contents(adminFile), true);
+	$youngPeople[$updated->id] = $updated;
+	file_put_contents(adminFile, json_encode($youngPeople, JSON_PRETTY_PRINT));
+}
 
+function getAdmin($id) {
+	return json_decode(file_get_contents(adminFile), true)[$id];	
+}
+
+function setChallenger($updated) {
+	$youngPeople = json_decode(file_get_contents(challengerFile), true);
+	$youngPeople[$updated->id] = $updated;
+	file_put_contents(challengerFile, json_encode($youngPeople, JSON_PRETTY_PRINT));
+}
+
+function getChallenger($id) {
+	return json_decode(file_get_contents(challengerFile), true)[$id];	
+}
+
+function setYoungPerson($updated) {
+	$youngPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	$youngPeople[$updated->id] = $updated;
+	file_put_contents(youngPeopleFile, json_encode($youngPeople, JSON_PRETTY_PRINT));
+}
+
+function getYoungPerson($id) {
+	return json_decode(file_get_contents(youngPeopleFile), true)[$id];	
+}
 
 
 
