@@ -1,40 +1,42 @@
 <?php
 
-include_once("Locations.php");
-include_once("Tools.php");
-
-$admins = file_get_contents(adminFile);
+include_once('Locations.php');
+include_once('Tools.php');
 
 if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
-
-	include_once("CheckLoggedIn.php");
-
+	//Create the response
 	$response = array();
 	$response['result'] = null;
 	$response['count'] = 0;
 	$response['errors'] = array();
 	
-	$keywords = array('new', 'edit', 'delete', 'find', 'search');
-
-	//To create a new admin with a given email
-	if (onlyKeyword('new', $keywords)) {
-		$response['result'] = createAdmin(
-			getString('new'),
-			getString('firstName')
-		);
+	//Check the user has valid login details
+	include_once('CheckLoggedIn.php');
+	
+	//Check the user is an admin
+	if (!isUserLevel('admin')) {
+		$response['errors'][] = 'You have to be an admin to use this command';
+	}
+	
+	//To get an existing admin
+	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		$id = getCurrentUserID();
+		$response['result'] = getAdmin($id);
 	}
 
-	//To edit an existing admin with a given ID
-	else if (onlyKeyword('edit', $keywords) &&
-			 atLeastOne(array('frozen', 'email', 'password', 'firstName', 'surname'))) {
-		$response['result'] = editAdmin(
-			getString('edit'),
-			getBool('frozen'),
-			getString('email'),
-			getEncrypted('password'),
-			getString('firstName'),
-			getString('surname')
-		);
+	//To edit an existing admin
+	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+		$response['result'] = editAdmin();
+	}
+
+	//To create a new challenger/young person
+	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		if ($_POST['type'] === 'challenger')
+			$response['result'] = createChallenger();
+		else if ($_POST['type'] === 'young person')
+			$response['result'] = createYoungPerson();
+		else
+			$response['errors'][] = "$_POST[type] is not a correct user type";
 	}
 
 	//To delete an admin with a given ID
@@ -42,29 +44,65 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 		$response['result'] = deleteAdmin();
 	}
 
-	//To search for admins with a query
-	else if (onlyKeyword('search', $keywords)) {
-		$response['result'] = searchAdmin(
-			getString('search'),
-			getString('where')
-		);
+	//To freeze/defrost a challenger/young person
+	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+		parse_str(file_get_contents('php://input'), $patchVars);
+		
+		//Detect possible errors
+		if ($patchVars['action'] !== 'freeze' && $patchVars['action'] !== 'defrost')
+			$response['errors'][] = "$patchVars[action] is not a correct action";
+		
+		$isChallenger = $isYoungPerson = false;
+		$user = getChallenger($patchVars['id']);
+		if (!empty($user))
+			$isChallenger = true;
+		else {
+			$user = getYoungPerson($patchVars['id']);
+		}
+		
+		if (!empty($user))
+			$isYoungPerson = true;
+		else
+			$response['errors'][] = "$patchVars[id] is not a valid user";
+		
+		//Decide which method to call
+		if ($isChallenger) {
+			if ($patchVars['action'] === 'freeze')
+				$response['result'] = freezeChallenger($patchVars['id']);
+			else if ($patchVars['action'] === 'defrost')
+				$response['result'] = defrostChallenger($patchVars['id']);
+		}
+		else if ($isYoungPerson){
+			if ($patchVars['action'] === 'freeze')
+				$response['result'] = freezeYoungPerson($patchVars['id']);
+			else if ($patchVars['action'] === 'defrost')
+				$response['result'] = defrostYoungPerson($patchVars['id']);
+		}
 	}
 
 	//Return a value
-	if (!empty($response['result']))
-		$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	$response['count'] = empty($response['result']) ? 0 : 
+		(is_array($response['result']) ? sizeof($response['result']) : 1);
 	echo json_encode(getReturnReady($response, true));
 }
 
 //Functions
 //=========
 
-function createYoungPerson($email, $firstName) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
+//Young People
+
+function createYoungPerson() {
+	$email = forceString($_POST['email']);
+	$firstName = forceString($_POST['firstName']);
+	
+	//Detect possible errors
+	$validKeys = array('type', 'email', 'firstName');
+	foreach (array_diff(array_keys($_POST), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of an admin";
 	}
+	
+	if (sizeof(array_intersect(array_keys($_POST), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties of an admin were given';
 	
 	//Check the given email is valid
 	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -84,22 +122,20 @@ function createYoungPerson($email, $firstName) {
 		'{$name}' => $firstName
 	);
 	$message = strtr(file_get_contents(newAccountEmail), $props);
-	$headers  = "From: NoReply@realideas.org;" . "\r\n";
+	$headers  = "From: noreply@realideas.org;" . "\r\n";
 	$headers .= "MIME-Version: 1.0;" . "\r\n";
 	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
 	
-	if(!mail($email, $subject, $message, $headers)) {
-		echo "Unable to email new address";
-		/////////////////////////////////////////////////
+	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
+		///////////////////////////////////////////////
 		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1')))
-			echo $tempPassword;
-		/////////////////////////////////////////////////
-		else 
-			die();
+		   echo $tempPassword;
+		///////////////////////////////////////////////
 	}
-	else
-		echo "Sent Email";
+	else if(!mail($email, $subject, $message, $headers)) {
+		$GLOBALS['response']['errors'][] = "Unable to send email to $email";
+		die();
+	}
 	
 	//Create the new young person
 	$returnable = new stdClass();
@@ -107,7 +143,7 @@ function createYoungPerson($email, $firstName) {
 	$returnable->frozen				= false;
 	$returnable->email              = $email;
 	$returnable->password           = null;
-	$returnable->tempPassword       = $tempPassword;
+	$returnable->tempPassword       = password_hash($tempPassword, PASSWORD_BCRYPT);
 	$returnable->firstName          = $firstName;
 	$returnable->surname            = null;
 	$returnable->balance			= 0;
@@ -123,14 +159,8 @@ function createYoungPerson($email, $firstName) {
 }
 
 function freezeYoungPerson($id) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
-	
 	//Find and update the young person
-	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable = getYoungPerson($id);
 	$returnable->frozen = true;
 	
 	//Save the young person
@@ -138,15 +168,9 @@ function freezeYoungPerson($id) {
 	return $returnable;	
 }
 
-function defrostYoungPerson($id) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
-	
+function defrostYoungPerson($id) {	
 	//Find and update the young person
-	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
+	$returnable = getYoungPerson($id);
 	$returnable->frozen = false;
 	
 	//Save the young person
@@ -217,91 +241,103 @@ function searchYoungPerson($searchPhrase, $where) {
 	return $matches;
 }
 
+//Challengers
 
-
-function editAdmin($email, $password, $firstName, $surname) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
+function createChallenger() {
+	$email = forceString($_POST['email']);
+	$name = forceString($_POST['name']);
+	
+	//Check the given email is valid
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 		return null;
 	}
 	
+	//Detect possible errors
+	$validKeys = array('email', 'name');
+	foreach (array_diff(array_keys($_POST), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+	}
+	
+	if (sizeof(array_intersect(array_keys($_POST), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties of a young person were given';
+	
 	//Check the given email is valid
-	if (!empty($email)) {
-		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
-		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
-			return null;
-		}
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+		return null;
 	}
 	
-	$id = getCurrentuserID();
-	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	//Generate a new temporary password 
+	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
 	
-	if ($email !== null)
-		$returnable->email = $email;
-	if ($password !== null) {
-		$returnable->password = $password;
-		unset($returnable->tempPassword);
+	//Create and send an email with login details
+	$subject = "Welcome to the Dead Pencil's App!";
+	$props = array(
+		'{$email}' => $email,
+		'{$tempPassword}' => $tempPassword,
+		'{$name}' => $firstName
+	);
+	$message = strtr(file_get_contents(newAccountEmail), $props);
+	$headers  = "From: noreply@realideas.org;" . "\r\n";
+	$headers .= "MIME-Version: 1.0;" . "\r\n";
+	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
+	
+	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
+		///////////////////////////////////////////////
+		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
+		   echo $tempPassword;
+		///////////////////////////////////////////////
 	}
-	if ($firstName !== null)
-		$returnable->firstName = $firstName;
-	if ($surname !== null)
-		$returnable->surname = $surname;
+	else if(!mail($email, $subject, $message, $headers)) {
+		$GLOBALS['response']['errors'][] = "Unable to send email to $email";
+		die();
+	}
 	
-	setYoungPerson($returnable);
+	//Create the new challenger
+	$returnable = new stdClass();
+	$returnable->id                 = date("zyHis");
+	$returnable->frozen             = false;
+	$returnable->email              = $email;
+	$returnable->password           = null;
+	$returnable->tempPassword       = password_hash($tempPassword, PASSWORD_BCRYPT);
+	$returnable->name               = $name;
+	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->cover              = coverPhotoFolder . "/" . $returnable->id . ".png";
+	$returnable->colour             = null;
+	$returnable->contactEmail       = null;
+	$returnable->contactPhone       = null;
+	$returnable->about              = null;
+	$returnable->currentChallenges  = array();
+	$returnable->archivedChallenges = array();
+	
+	setChallenger($returnable);
 	return $returnable;
 }
 
-function freezeAdmin($id) {
-	//Check the user is a god
-	if (!isUserLevel('got')) {
-		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
-		return null;
-	}
-	
-	//Find and update the admin
-	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+function freezeChallenger($id) {	
+	//Find and update the challenger
+	$returnable = getChallenger($id);
 	$returnable->frozen = true;
 	
-	//Save the admin
-	updateAdmin($returnable);
+	//Save the challenger
+	setChallenger($returnable);
 	return $returnable;	
 }
 
-function defrostAdmin($id) {
-	//Check the user is a god
-	if (!isUserLevel('god')) {
-		$GLOBALS['response']['errors'][] = "You have to be a god account to use this command";
-		return null;
-	}
-	
-	//Find and update the admin
-	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+function defrostChallenger($id) {	
+	//Find and update the challenger
+	$returnable = getChallenger($id);
 	$returnable->frozen = false;
 	
-	//Save the admin
-	updateAdmin($returnable);
+	//Save the challenger
+	setChallenger($returnable);
 	return $returnable;
 }
 
-function deleteAdmin() {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
-	
-	$id = getCurrentuserID();
-	$admins = json_decode(file_get_contents(adminFile), true);
-	$returnable = $admins[$id];
-	
-	unset($admins[$id]);
-	file_put_contents(adminFile, json_encode($admins));
-	return $returnable;
-}
-
-function searchAdmin($searchPhrase, $where) {
+function searchChallenger($searchPhrase, $where) {
 	$searchPhrase = strtolower($searchPhrase);
 	
 	//Find all the different sub-search terms
@@ -321,7 +357,7 @@ function searchAdmin($searchPhrase, $where) {
 		}
 	}
 	
-	$admins = json_decode(file_get_contents(adminFile), true);
+	$challengers = json_decode(file_get_contents(youngPeopleFile), true);
 	
 	$matches = array();
 	$matchedIDs = array();
@@ -329,8 +365,8 @@ function searchAdmin($searchPhrase, $where) {
 	//For every search term
 	foreach ($searchTerms as $i => $term) {
 		if (!empty($term)) {
-			//For every young person
-			foreach ($_admins as $ii => $person) {
+			//For every challenger
+			foreach ($challengers as $ii => $person) {
 				$skip = false;
 				foreach	($params as $param) {
 					if (is_bool($person->{$param[0]})) {
@@ -349,8 +385,8 @@ function searchAdmin($searchPhrase, $where) {
 				if ($skip)
 					continue;
 				
-				if ((strpos(strtolower($person->firstName), $term) !== false
-							  || strpos(strtolower($person->surname), $term) !== false)
+				if ((strpos(strtolower($person->name), $term) !== false
+							  || strpos(strtolower($person->about), $term) !== false)
 							  && !in_array($person->id, $matchedIDs)) {
 					array_push($matches, $person);
 					array_push($matchedIDs, $person->id);
@@ -362,14 +398,64 @@ function searchAdmin($searchPhrase, $where) {
 	return $matches;
 }
 
+//Admins
 
-
-
-function updateAdmin($updated) {
-	$admins = json_decode(file_get_contents(adminFile), true);
-	$admins[$updated->id] = $updated;
-	file_put_contents(adminFile, json_encode($admins, JSON_PRETTY_PRINT));
+function editAdmin() {
+	parse_str(file_get_contents('php://input'), $putVars);
+	
+	//Check the given email is valid
+	if (!empty($email)) {
+		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+			return null;
+		}
+	}
+	
+	//Detect possible errors
+	$validKeys = array('email', 'password', 'firstName', 'surname');
+	foreach (array_diff(array_keys($putVars), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+	}
+	
+	if (sizeof(array_intersect(array_keys($putVars), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties of a young person were given';
+	
+	//Get the admin
+	$id = getCurrentuserID();
+	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	
+	//Edit the admin
+	if (!empty($putVars['email']))
+		$returnable->email = forceString($putVars['email']);
+	if (!empty($putVars['password'])) {
+		$returnable->password = password_hash(forceString($putVars['password']), PASSWORD_BCRYPT);
+		unset($person->tempPassword);
+	}
+	if (!empty($putVars['firstName']))
+		$returnable->firstName = forceString($putVars['firstName']);
+	if (!empty($putVars['surname']))
+		$returnable->surname = forceString($putVars['surname']);
+	
+	setAdmin($returnable);
+	return $returnable;
 }
+
+function deleteAdmin() {
+	//Get and delete the admin
+	$id = getCurrentuserID();
+	$admins = json_decode(file_get_contents(adminFile), true);
+	$returnable = $admins[$id];
+	unset($admins[$id]);
+	
+	//Save and return the admin
+	file_put_contents(adminFile, json_encode($admins));
+	return $returnable;
+}
+
+
+
+
 
 
 

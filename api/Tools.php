@@ -1,84 +1,5 @@
 <?php
 
-include_once("GetYoungPeople.php");
-include_once("GetChallengers.php");
-include_once("GetChallenges.php");
-
-function onlyKeyword($keyword, $keywords) {
-	foreach	($keywords as $i => $key) {
-		if ($key != $keyword && !empty($_GET[$key]))
-			return false;
-	}
-	return !empty($_GET[$keyword]);
-}
-
-function atLeastOne($values) {
-	foreach ($values as $i => $value) {
-		if (!empty($_GET[$value]))
-			return true;
-	}
-	return false;
-}
-
-function atLeastAll($values) {
-	foreach ($values as $i => $value) {
-		if (empty($_GET[$value]))
-			return false;
-	}
-	return true;
-}
-
-//Get Types
-
-function getArray($array) {
-	if (empty($_GET[$array]))
-		return array();
-	else if (is_array($_GET[$array]))
-		return $_GET[$array];
-	else
-		return array($_GET[$array]);
-}
-
-function getString($var) {
-	if (empty($_GET[$var]))
-		return null;
-	else if (is_array($_GET[$var]))
-		return array_values($_GET[$var])[0];
-	else
-		return $_GET[$var];
-}
-
-function getEncrypted($var) {
-	if (empty($_GET[$var]))
-		return null;
-	else if (is_array($_GET[$var]))
-		return password_hash(array_values($_GET[$var])[0], PASSWORD_BCRYPT);
-	else
-		return password_hash($_GET[$var], PASSWORD_BCRYPT);
-}
-
-function getInt($var) {
-	if (empty($_GET[$var]))
-		return null;
-	else if (is_array($_GET[$var]))
-		return (int)(array_values($_GET[$var])[0]);
-	else
-		return (int)$_GET[$var];
-}
-
-function getBool($var) {
-	$falsey = array('', '0', 'false', 'False', 'FALSE');
-	if (empty($_GET[$var]))
-		return false;
-	else if (is_array($_GET[$var])) {
-		return !in_array(array_values($_GET[$var])[0], $falsey);
-	} else {
-		return !in_array($_GET[$var], $falsey);
-	}
-}
-
-//End get Types
-
 function getReturnReady($returnable, $goDeeper) {
 	$data = $returnable['result'];
 	if (is_array($data)) {
@@ -99,7 +20,7 @@ function getObjReturnReady($data, $goDeeper) {
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = findChallenger($data->challenger, null);
+			$results = getChallenger($data->challenger, null);
 			if (count($results) > 0)
 				$data->challenger = $results[0];
 		}
@@ -109,7 +30,7 @@ function getObjReturnReady($data, $goDeeper) {
 				$data->currentChallenges = $results;
 		}
 		if (!empty($data->attendees)) {
-			$results = findYoungPerson(implode(',', $data->attendees), null);
+			$results = getYoungPerson(implode(',', $data->attendees), null);
 			if (count($results) > 0)
 				$data->attendees = $results;
 		}
@@ -138,7 +59,69 @@ function isUserLevel($wantedLevel) {
 	return false;
 }
 
-// Getter and Setters
+//Get Types
+
+function forceString($var) {
+	if (empty($var))
+		return '';
+	if (is_array($var)) {
+		if (sizeof($var) > 0)
+			return forceString($var[0]);
+		else
+			return '';
+	}
+	if (is_object($var)) {
+		return forceString((array)$var);
+	}
+	else
+		return '' . $var;
+}
+
+function forceInt($var) {
+	if (empty($var))
+		return 0;
+	if (is_array($var)) {
+		if (sizeof($var) > 0)
+			return forceInt($var[0]);
+		else
+			return 0;
+	}
+	if (is_object($var)) {
+		return forceInt((array)$var);
+	}
+	else
+		return (int) $var;
+}
+
+function forceBool($var) {
+	$falsey = array('', '0', 'false', 'False', 'FALSE');
+	if (empty($var))
+		return false;
+	if (is_array($var)) {
+		if (sizeof($var) > 0)
+			return forceBool($var[0]);
+		else
+			return false;
+	}
+	if (is_object($var)) {
+		return forceBool((array)$var);
+	}
+	else
+		return !in_array((string)$var, $falsey);
+}
+
+function forceStringArray($var) {
+	if (empty($var))
+		return array();
+	if (is_object($var)) {
+		$var = (array) $var;
+	}
+	foreach ($var as $thing)
+		$thing = forceString($thing);
+	return $var;
+}
+
+// Getters and Setters
 
 function getCurrentUserID() {
 	$data = apache_request_headers()['Authorization'];
@@ -165,7 +148,11 @@ function setAdmin($updated) {
 }
 
 function getAdmin($id) {
-	return json_decode(file_get_contents(adminFile), true)[$id];	
+	$allAdmins = json_decode(file_get_contents(adminFile), true);
+	if (array_key_exists($id, $allAdmins))
+		return (object) $allAdmins[$id];
+	else
+		return null;
 }
 
 function setChallenger($updated) {
@@ -175,7 +162,11 @@ function setChallenger($updated) {
 }
 
 function getChallenger($id) {
-	return json_decode(file_get_contents(challengerFile), true)[$id];	
+	$allChallengers = json_decode(file_get_contents(challengerFile), true);
+	if (array_key_exists($id, $allChallengers))
+		return (object) $allChallengers[$id];
+	else
+		return null;	
 }
 
 function setYoungPerson($updated) {
@@ -185,10 +176,26 @@ function setYoungPerson($updated) {
 }
 
 function getYoungPerson($id) {
-	return json_decode(file_get_contents(youngPeopleFile), true)[$id];	
+	$allYoungPerson = json_decode(file_get_contents(youngPeopleFile), true);
+	if (array_key_exists($id, $allYoungPerson))
+		return (object) $allYoungPerson[$id];
+	else
+		return null;
 }
 
+function setChallenge($updated) {
+	$challenges = json_decode(file_get_contents(currentChallengesFile), true);
+	$challenges[$updated->id] = $updated;
+	file_put_contents(currentChallengesFile, json_encode($challenges, JSON_PRETTY_PRINT));
+}
 
+function getChallenge($id) {
+	$allChallenges = json_decode(file_get_contents(currentChallengesFile), true);
+	if (array_key_exists($id, $allChallenges))
+		return (object) $allChallenges[$id];
+	else
+		return null;	
+}
 
 
 

@@ -1,192 +1,95 @@
 <?php
 
-include_once("Locations.php");
-include_once("Tools.php");
-
-$challengers = file_get_contents(challengerFile);
+include_once('Locations.php');
+include_once('Tools.php');
 
 if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_FILENAME'])) {
-
-	include_once("CheckLoggedIn.php");
-
+	//Create the response
 	$response = array();
 	$response['result'] = null;
 	$response['count'] = 0;
 	$response['errors'] = array();
 	
-	$keywords = array('new', 'edit', 'freeze', 'defrost', 'delete', 'search');
-
-	//To create a new challenger with a given email
-	if (onlyKeyword('new', $keywords)) {
-		$response['result'] = createChallenger(
-			getString('new'),
-			getString('name')
-		);
-	}
-
-	//To edit an existing challenger with a given ID
-	else if (onlyKeyword('edit', $keywords) &&
-			 atLeastOne(array('email', 'password', 'name', 'colour',
-							  'contactEmail', 'contactPhone', 'about'))) {
-		$response['result'] = editChallenger(
-			getString('edit'),
-			getString('email'),
-			getEncrypted('password'),
-			getString('name'),
-			getString('colour'),
-			getString('contactEmail'),
-			getString('contactPhone'),
-			getString('about')
-		);
+	//Check the user has valid login details
+	include_once('CheckLoggedIn.php');
+	
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$response['errors'][] = 'You have to be a challenger to use this command';
 	}
 	
-	//To freeze a challenger
-	else if (onlyKeyword('freeze', $keywords) &&
-			 atLeastOne(array('id'))) {
-		$response['result'] = freezeChallenger(
-			getString('id')
-		);
-	}
-	
-	//To defrost a challenger
-	else if (onlyKeyword('defrost', $keywords) &&
-			 atLeastOne(array('id'))) {
-		$response['result'] = defrostChallenger(
-			getString('id')
-		);
+	//To get an existing challenger
+	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		$id = getCurrentUserID();
+		$response['result'] = getChallenger($id);
 	}
 
-	//To delete a challenger with a given ID
+	//To edit an existing challenger
+	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+		$response['result'] = editChallenger();
+	}
+
+	//To delete a challenger
 	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 		$response['result'] = deleteChallenger();
 	}
-
-	//To search for challengers with a query
-	else if (onlyKeyword('search', $keywords)) {
-		$response['result'] = searchChallenger(
-			getString('search'),
-			getString('where')
-		);
+	
+	//To give feedback to and pay a young person
+	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+		$response['result'] = feedbackYoungPerson();
 	}
+	
+	//To give feedback to a young Person
 
 	//Return a value if needed
-	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	$response['count'] = empty($response['result']) ? 0 : 
+		(is_array($response['result']) ? sizeof($response['result']) : 1);
 	echo json_encode(getReturnReady($response, true));
 }
 
 //Functions
 //=========
 
-function payYoungPerson($id, $pay) {
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
-		return null;
-	}
-	
-	//Find and update the young person
-	$id = getCurrentuserID();
-	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
-	$returnable->balance .= $pay;
-	
-	//Save the young person
-	setYoungPerson($returnable);
-	return $returnable;
-}
+//Young People
 
-function feedbackYoungPerson($id, $challenge, $rating, $comment) {
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
-		return null;
+function feedbackYoungPerson() {
+	parse_str(file_get_contents('php://input'), $patchVars);
+	
+	//Detect possible errors
+	$validKeys = array('id', 'challenge', 'rating', 'comment', 'pay');
+	foreach (array_diff(array_keys($postVars), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a challenger";
 	}
+	
+	if (sizeof(array_intersect(array_keys($postVars), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties of a challenger were given';
+	
+	//Get the challenge
+	$patchVars['challenge'] = getChallenge($patchVars['challenge']
 	
 	//Create the feedback object
 	$feedback = new stdClass();
-	$feedback->challenge = $challenge;
-	$feedback->rating = $rating;
-	$feedback->comment = $comment;
+	$feedback->challenge = $patchVars['challenge'];
+	$feedback->rating = forceInt($patchVars['rating']);
+	$feedback->comment = forceString($patchVars['comment']);
 	
-	//Find and update the young person
-	$returnable = json_decode(file_get_contents(youngPeopleFile), true)[$id];
-	$returnable->feedbacks[] = $feedback;
+	//Find and give the feedback to the young person
+	$returnable = getYoungPerson($patchVars['id']);
+	$returnable->feedbacks[$patchVars['challenge']] = $feedback;
 	
-	//Save the young person
-	setYoungPerson($returnable);
+	//Pay the young person for the challenge
+	$returnable->balance += $patchVars['pay'];
+	
+	//Save and return the young person
+	getChallenge($returnable);
 	return $returnable;
 }
 
+//Challengers
 
-function createChallenger($email, $name) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
+function editChallenger() {
 	
-	//Check the given email is valid
-	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
-	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-		$GLOBALS['response']['errors'][] = "$email is not a valid email address";
-		return null;
-	}
-	
-	//Generate a new temporary password 
-	$tempPassword = bin2hex(openssl_random_pseudo_bytes(4));
-	
-	//Create and send an email with login details
-	$subject = "Welcome to the Dead Pencil's App!";
-	$props = array(
-		'{$email}' => $email,
-		'{$tempPassword}' => $tempPassword,
-		'{$name}' => $firstName
-	);
-	$message = strtr(file_get_contents(newAccountEmail), $props);
-	$headers  = "From: NoReply@realideas.org;" . "\r\n";
-	$headers .= "MIME-Version: 1.0;" . "\r\n";
-	$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
-	
-	if(!mail($email, $subject, $message, $headers)) {
-		echo "Unable to email new address";
-		/////////////////////////////////////////////////
-		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1')))
-			echo $tempPassword;
-		/////////////////////////////////////////////////
-		else 
-			die();
-	}
-	else
-		echo "Sent Email";
-	
-	//Create the new challenger
-	$returnable = new stdClass();
-	$returnable->id                 = date("zyHis");
-	$returnable->frozen             = false;
-	$returnable->email              = $email;
-	$returnable->password           = null;
-	$returnable->tempPassword       = $tempPassword;
-	$returnable->name               = $name;
-	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
-	$returnable->cover              = coverPhotoFolder . "/" . $returnable->id . ".png";
-	$returnable->colour             = null;
-	$returnable->contactEmail       = null;
-	$returnable->contactPhone       = null;
-	$returnable->about              = null;
-	$returnable->currentChallenges  = array();
-	$returnable->archivedChallenges = array();
-	
-	updateChallenger($returnable);
-	return $returnable;
-}
-
-function editChallenger($email, $password, $name, $colour,
-						$contactEmail, $contactPhone, $about) {
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
-		return null;
-	}
+	parse_str(file_get_contents('php://input'), $postVars);
 	
 	//Check the given email is valid
 	if (!empty($email)) {
@@ -197,148 +100,56 @@ function editChallenger($email, $password, $name, $colour,
 		}
 	}
 	
-	$id = getCurrentuserID();	
-	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
+	//Detect possible errors
+	$validKeys = array('email', 'password', 'name', 'colour', 'contactEmail', 'contactPhone', 'about');
+	foreach (array_diff(array_keys($postVars), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+	}
 	
-	if ($email !== null)
-		$returnable->email = $email;
-	if ($password !== null) {
-		$returnable->password = $password;
+	if (sizeof(array_intersect(array_keys($postVars), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties of a young person were given';
+	
+	//Get the challenger
+	$id = getCurrentuserID();
+	$returnable = getChallenger($id);
+	
+	//Edit the challenger
+	if (!empty($postVars['email']))
+		$returnable->email = forceString($postVars['email']);
+	if (!empty($postVars['password'])) {
+		$returnable->password = forceString($postVars['password']);
 		unset($returnable->tempPassword);
 	}
-	if ($name !== null)
-		$returnable->name = $name;
-	if ($colour !== null)
-		$returnable->colour = $colour;
-	if ($contactEmail !== null)
-		$returnable->contactEmail = $contactEmail;
-	if ($contactPhone !== null)
-		$returnable->contactPhone = $contactPhone;
-	if ($about !== null)
-		$returnable->about = $about;
+	if (!empty($postVars['name']))
+		$returnable->name = forceString($postVars['name']);
+	if (!empty($postVars['colour']))
+		$returnable->colour = forceString($postVars['colour']);
+	if (!empty($postVars['contactEmail']))
+		$returnable->contactEmail = forceString($postVars['contactEmail']);
+	if (!empty($postVars['contactPhone']))
+		$returnable->contactPhone = forceString($postVars['contactPhone']);
+	if (!empty($postVars['about']))
+		$returnable->about = forceString($postVars['about']);
 	
-	updateChallenger($returnable);
+	//Save and return the challenger
+	setChallenger($returnable);
 	return $returnable;	
-}
-
-function freezeChallenger($id) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
-	
-	//Find and update the challenger
-	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
-	$returnable->frozen = true;
-	
-	//Save the challenger
-	updateChallenger($returnable);
-	return $returnable;	
-}
-
-function defrostChallenger($id) {
-	//Check the user is an admin
-	if (!isUserLevel('admin')) {
-		$GLOBALS['response']['errors'][] = "You have to be an admin to use this command";
-		return null;
-	}
-	
-	//Find and update the challenger
-	$returnable = json_decode(file_get_contents(challengerFile), true)[$id];
-	$returnable->frozen = false;
-	
-	//Save the challenger
-	updateChallenger($returnable);
-	return $returnable;
 }
 
 function deleteChallenger() {
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$GLOBALS['response']['errors'][] = "You have to be a challenger to use this command";
-		return null;
-	}
-	
+	//Get and delete the challenger
 	$id = getCurrentuserID();
 	$challengers = json_decode(file_get_contents(challengerFile), true);
 	$returnable = $challengers[$id];
-	
 	unset($challengers[$id]);
+	
+	//Save and return the challenger
 	file_put_contents(challengerFile, json_encode($challengers));
 	return $returnable;
 }
 
-function searchChallenger($searchPhrase, $where) {
-	$searchPhrase = strtolower($searchPhrase);
-	
-	//Find all the different sub-search terms
-	$searchTerms = array();
-	for ($i = strlen($searchPhrase); $i > 1; $i--) {
-		for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
-			array_push($searchTerms, substr($searchPhrase, $ii, $i));
-		}
-	}
-	
-	//Find all the fixed parameters
-	$params = array();
-	if (!empty($where)) {
-		$params = explode(';', $where);
-		for	($iii = 0; $iii < count($params); $iii++) {
-			$params[$iii] = explode(':', $params[$iii], 2);
-		}
-	}
-	
-	$challengers = json_decode(file_get_contents(youngPeopleFile), true);
-	
-	$matches = array();
-	$matchedIDs = array();
-	
-	//For every search term
-	foreach ($searchTerms as $i => $term) {
-		if (!empty($term)) {
-			//For every challenger
-			foreach ($challengers as $ii => $person) {
-				$skip = false;
-				foreach	($params as $param) {
-					if (is_bool($person->{$param[0]})) {
-						if (json_decode($person->{$param[0]}) != json_decode($param[1])) {
-							$skip = true;
-							break;
-						}
-					} else {
-						if ($person->{$param[0]} != $param[1]) {
-							$skip = true;
-							break;
-						}
-					}
-				}
-				
-				if ($skip)
-					continue;
-				
-				if ((strpos(strtolower($person->name), $term) !== false
-							  || strpos(strtolower($person->about), $term) !== false)
-							  && !in_array($person->id, $matchedIDs)) {
-					array_push($matches, $person);
-					array_push($matchedIDs, $person->id);
-				}
-			}
-		}
-	}
-	
-	return $matches;
-}
 
 
-
-
-
-function updateChallenger($updated) {
-	$challengers = json_decode(file_get_contents(challengerFile), true);
-	$challengers[$updated->id] = $updated;
-	file_put_contents(challengerFile, json_encode($challengers, JSON_PRETTY_PRINT));
-}
 
 
 

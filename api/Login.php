@@ -1,11 +1,10 @@
 <?php
 
-include_once('Locations.php');
-include_once('GetToken.php');
-include_once('GetAdmins.php');
-include_once('GetChallengers.php');
-include_once('GetYoungPeople.php');
+include_once("GetToken.php");
+include_once("Locations.php");
+include_once("Tools.php");
 
+//Create the response
 $response = array();
 $response['token'] = null;
 $response['errors'] = array();
@@ -54,44 +53,21 @@ function checkUserBase($file, $accountType) {
 			
 			//If the account is using a tempPassword and it matches			
 			if (password_verify($_POST['tempPassword'], $user->tempPassword)) {
-				switch ($accountType) {
-					case 'admin':
-						//Read all admins
-						$allUsers = json_decode(file_get_contents(adminFile));
-						//Find the wanted one
-						$foundUser = $allUsers->{$user->id};
-						//Adjust the password settings
-						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-						unset($foundUser->tempPassword);
-						//Re-add the wanted admin back in
-						$allUsers->{$user->id} = $foundUser;
-						file_put_contents(adminFile, json_encode($allUsers, JSON_PRETTY_PRINT));
-						break;
-					case 'challenger':
-						//Read all challengers
-						$allUsers = json_decode(file_get_contents(challengerFile));
-						//Find the wanted one
-						$foundUser = $allUsers->{$user->id};
-						//Adjust the password settings
-						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-						unset($foundUser->tempPassword);
-						//Re-add the wanted challenger back in
-						$allUsers->{$user->id} = $foundUser;
-						file_put_contents(challengerFile, json_encode($allUsers, JSON_PRETTY_PRINT));
-						break;
-					case 'youngPerson':
-						//Read all young people
-						$allUsers = json_decode(file_get_contents());
-						//Find the wanted one
-						$foundUser = $allUsers->{$user->id};
-						//Adjust the password settings
-						$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-						unset($foundUser->tempPassword);
-						//Re-add the wanted young person back in
-						$allUsers->{$user->id} = $foundUser;
-						file_put_contents(youngPeopleFile, json_encode($allUsers, JSON_PRETTY_PRINT));
-						break;
-				}
+				$dataSets = array(
+					'admin' => adminFile,
+					'challenger' => challengerFile,
+					'youngPerson' => youngPeopleFile
+				);
+				
+				//Find the user 
+				$allUsers = json_decode(file_get_contents($dataSets[$accountType]));
+				$foundUser = $allUsers->{$user->id};
+				$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+				unset($foundUser->tempPassword);
+				
+				//Save the user and return the token
+				$allUsers->{$user->id} = $foundUser;				
+				file_put_contents($dataSets[$accountType], json_encode($allUsers, JSON_PRETTY_PRINT));				
 				$GLOBALS['response']['token'] = GetToken($foundUser->id, $accountType);
 				return true;
 			}
@@ -101,6 +77,7 @@ function checkUserBase($file, $accountType) {
 			}
 		}
 		
+		//Check if the given password matches
 		if (password_verify($_POST['password'], $user->password))
 			$GLOBALS['response']['token'] = GetToken($user->id, $accountType);
 		else

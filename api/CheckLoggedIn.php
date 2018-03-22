@@ -2,9 +2,7 @@
 
 include_once("GetToken.php");
 include_once("Locations.php");
-include_once("GetAdmins.php");
-include_once("GetChallengers.php");
-include_once("GetYoungPeople.php");
+include_once("Tools.php");
 
 //If no JWT is given
 if (empty(apache_request_headers()['Authorization']))
@@ -30,15 +28,14 @@ if (sizeof(explode(' ', $data)) === 2) {
 		
 		if (json_decode(base64_decode($checkPayload))->user_typ !== 'god') {
 		
-			$userID = json_decode(base64_decode($checkPayload))->user_id;
+			$userID = getCurrentUserID();
 			
-			if (array_key_exists($userID, json_decode(file_get_contents(adminFile), true)))
-				$match = json_decode(file_get_contents(adminFile), true)[$userID];
-			if (array_key_exists($userID, json_decode(file_get_contents(challengerFile), true)))
-				$match = json_decode(file_get_contents(challengerFile), true)[$userID];
-			if (array_key_exists($userID, json_decode(file_get_contents(youngPeopleFile), true)))
-				$match = json_decode(file_get_contents(youngPeopleFile), true)[$userID];
-			
+			$match = null;
+			$match = getAdmin($userID);
+			if ($match === null)
+				$match = getChallenger($userID);
+			if ($match === null)
+				$match = getYoungPerson($userID);
 			
 			//Check account isn't frozen
 			if (!empty($match)) {
@@ -58,8 +55,12 @@ else
 
 
 function killAll($message) {
-	echo json_encode(array('errors' => array($message)));
+	$GLOBALS['response']['errors'][] = $message;
+	$GLOBALS['response']['count'] = empty($GLOBALS['response']['result']) ? 0 : 
+		(is_array($GLOBALS['response']['result']) ? sizeof($GLOBALS['response']['result']) : 1);
+	echo json_encode(getReturnReady($GLOBALS['response'], true));
 	die();
+	
 }
 
 
