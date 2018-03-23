@@ -9,7 +9,7 @@ function getReturnReady($returnable, $goDeeper) {
 		$returnable['result'] = $data;
 	}
 	else
-		$returnable['result'] = getObjReturnReady($data, $goDeeper);
+		$returnable['result'] = array(getObjReturnReady($data, $goDeeper));
 	
 	return $returnable;
 }
@@ -20,17 +20,17 @@ function getObjReturnReady($data, $goDeeper) {
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = getChallenger($data->challenger, null);
+			$results = getChallenger($data->challenger);
 			if (count($results) > 0)
 				$data->challenger = $results[0];
 		}
 		if (!empty($data->currentChallenges)) {
-			$results = findChallenges(implode(',', $data->currentChallenges), null);
+			$results = findChallenges(implode(',', $data->currentChallenges));
 			if (count($results) > 0)
 				$data->currentChallenges = $results;
 		}
 		if (!empty($data->attendees)) {
-			$results = getYoungPerson(implode(',', $data->attendees), null);
+			$results = getYoungPerson(implode(',', $data->attendees));
 			if (count($results) > 0)
 				$data->attendees = $results;
 		}
