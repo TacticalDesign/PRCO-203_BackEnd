@@ -41,7 +41,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To give feedback to a young Person
 
-	//Return a value if needed
+	//Return a value
 	$response['count'] = empty($response['result']) ? 0 : 
 		(is_array($response['result']) ? sizeof($response['result']) : 1);
 	echo json_encode(getReturnReady($response, true));
@@ -65,7 +65,7 @@ function feedbackYoungPerson() {
 		$GLOBALS['response']['errors'][] = 'No valid properties of a challenger were given';
 	
 	//Get the challenge
-	$patchVars['challenge'] = getChallenge($patchVars['challenge']
+	$patchVars['challenge'] = getChallenge($patchVars['challenge']);
 	
 	//Create the feedback object
 	$feedback = new stdClass();

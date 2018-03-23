@@ -139,7 +139,7 @@ function createYoungPerson() {
 	
 	//Create the new young person
 	$returnable = new stdClass();
-	$returnable->id                 = date("zyHis");
+	$returnable->id                 = getNewID();
 	$returnable->frozen				= false;
 	$returnable->email              = $email;
 	$returnable->password           = null;
@@ -147,7 +147,7 @@ function createYoungPerson() {
 	$returnable->firstName          = $firstName;
 	$returnable->surname            = null;
 	$returnable->balance			= 0;
-	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
+	$returnable->image              = profileFolder . '/' . $returnable->id . '.png';
 	$returnable->skills             = array();
 	$returnable->interests          = array();
 	$returnable->currentChallenges  = array();
@@ -298,14 +298,14 @@ function createChallenger() {
 	
 	//Create the new challenger
 	$returnable = new stdClass();
-	$returnable->id                 = date("zyHis");
+	$returnable->id                 = getNewID();
 	$returnable->frozen             = false;
 	$returnable->email              = $email;
 	$returnable->password           = null;
 	$returnable->tempPassword       = password_hash($tempPassword, PASSWORD_BCRYPT);
 	$returnable->name               = $name;
-	$returnable->image              = profileFolder . "/" . $returnable->id . ".png";
-	$returnable->cover              = coverPhotoFolder . "/" . $returnable->id . ".png";
+	$returnable->image              = profileFolder . '/' . $returnable->id . '.png';
+	$returnable->cover              = coverPhotoFolder . '/' . $returnable->id . '.png';
 	$returnable->colour             = null;
 	$returnable->contactEmail       = null;
 	$returnable->contactPhone       = null;
@@ -404,10 +404,10 @@ function editAdmin() {
 	parse_str(file_get_contents('php://input'), $putVars);
 	
 	//Check the given email is valid
-	if (!empty($email)) {
-		$email = filter_var($email, FILTER_SANITIZE_EMAIL);
-		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
+	if (!empty($putVars['email'])) {
+		$putVars['email'] = filter_var($email, FILTER_SANITIZE_EMAIL);
+		if (!filter_var($putVars['email'], FILTER_VALIDATE_EMAIL)) {
+			$GLOBALS['response']['errors'][] = "$putVars[email] is not a valid email address";
 			return null;
 		}
 	}
@@ -415,7 +415,7 @@ function editAdmin() {
 	//Detect possible errors
 	$validKeys = array('email', 'password', 'firstName', 'surname');
 	foreach (array_diff(array_keys($putVars), $validKeys) as $i => $wrongProp) {
-		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of an admin";
 	}
 	
 	if (sizeof(array_intersect(array_keys($putVars), $validKeys)) === 0)
@@ -423,7 +423,7 @@ function editAdmin() {
 	
 	//Get the admin
 	$id = getCurrentuserID();
-	$returnable = json_decode(file_get_contents(adminFile), true)[$id];
+	$returnable = getAdmin($id);
 	
 	//Edit the admin
 	if (!empty($putVars['email']))

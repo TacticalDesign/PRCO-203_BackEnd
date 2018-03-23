@@ -100,7 +100,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 		);
 	}
 	
-	//Return a value if needed
+	//Return a value
 	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
 	echo json_encode(getReturnReady($response, true));
 }
@@ -114,7 +114,7 @@ function createChallenge($challenger, $name,
 						 $location1, $location2, $location3,
 						 $closingTime, $minAttendees, $maxAttendees, $attendees) {
 	$returnable = new stdClass();
-	$returnable->id            = date("zyHis");
+	$returnable->id            = getNewID();
 	$returnable->frozen        = false;
 	$returnable->challenger    = $challenger;
 	$returnable->adminApproved = false;

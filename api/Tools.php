@@ -8,8 +8,10 @@ function getReturnReady($returnable, $goDeeper) {
 		}
 		$returnable['result'] = $data;
 	}
-	else
-		$returnable['result'] = array(getObjReturnReady($data, $goDeeper));
+	else {
+		$ready = getObjReturnReady($data, $goDeeper);
+		$returnable['result'] = $ready === null ? array() : array($ready);
+	}
 	
 	return $returnable;
 }
@@ -20,9 +22,9 @@ function getObjReturnReady($data, $goDeeper) {
 	
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
-			$results = getChallenger($data->challenger);
-			if (count($results) > 0)
-				$data->challenger = $results[0];
+			$result = getChallenger($data->challenger);
+			if (!empty($result))
+				$data->challenger = getObjReturnReady($result, false);
 		}
 		if (!empty($data->currentChallenges)) {
 			$results = findChallenges(implode(',', $data->currentChallenges));
@@ -57,6 +59,11 @@ function isUserLevel($wantedLevel) {
 		}
 	}
 	return false;
+}
+
+function getNewID() {
+	usleep(1);
+	return str_replace('.', '', '' . microtime(true));
 }
 
 //Get Types
