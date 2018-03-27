@@ -129,7 +129,7 @@ function createYoungPerson() {
 	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
 		///////////////////////////////////////////////
 		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		   echo $tempPassword;
+		//   echo $tempPassword;
 		///////////////////////////////////////////////
 	}
 	else if(!mail($email, $subject, $message, $headers)) {
@@ -255,9 +255,9 @@ function createChallenger() {
 	}
 	
 	//Detect possible errors
-	$validKeys = array('email', 'name');
+	$validKeys = array('type', 'email', 'name');
 	foreach (array_diff(array_keys($_POST), $validKeys) as $i => $wrongProp) {
-		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a challenger";
 	}
 	
 	if (sizeof(array_intersect(array_keys($_POST), $validKeys)) === 0)
@@ -278,7 +278,7 @@ function createChallenger() {
 	$props = array(
 		'{$email}' => $email,
 		'{$tempPassword}' => $tempPassword,
-		'{$name}' => $firstName
+		'{$name}' => $name
 	);
 	$message = strtr(file_get_contents(newAccountEmail), $props);
 	$headers  = "From: noreply@realideas.org;" . "\r\n";
@@ -288,7 +288,7 @@ function createChallenger() {
 	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
 		///////////////////////////////////////////////
 		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		   echo $tempPassword;
+		//   echo $tempPassword;
 		///////////////////////////////////////////////
 	}
 	else if(!mail($email, $subject, $message, $headers)) {
