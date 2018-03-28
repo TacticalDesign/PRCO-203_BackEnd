@@ -48,7 +48,7 @@ function createChallenge() {
 	$returnable->challenger    = getCurrentuserID();
 	$returnable->adminApproved = false;
 	$returnable->name          = forceString(empty($_POST['name']) ? '' : $_POST['name']);
-	$returnable->image         = profileFolder . '/' . $returnable->id . ".png";
+	$returnable->image         = profileFolder . '/' . $returnable->id . '.png';
 	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['name']);
 	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['name']);
 	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['name']);
