@@ -13,24 +13,29 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//Check the user has valid login details
 	include_once('CheckLoggedIn.php');
 	
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$response['errors'][] = 'You have to be a challenger to use this command';
-	}
-	
 	//To get an existing challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {		
+	if ($_SERVER['REQUEST_METHOD'] === 'GET') {		
 		$response['result'] = getChallenge(forceString($_GET['id']));
 	}
 
 	//To create a new challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-		$response['result'] = createChallenge();
+	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {	
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = createChallenge();
 	}
 
 	//To edit an existing challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-		$response['result'] = editChallenge();
+	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {	
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = editChallenge();
 	}
 	
 	//Return a value
@@ -49,15 +54,15 @@ function createChallenge() {
 	$returnable->adminApproved = false;
 	$returnable->name          = forceString(empty($_POST['name']) ? '' : $_POST['name']);
 	$returnable->image         = profileFolder . '/' . $returnable->id . '.png';
-	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['name']);
-	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['name']);
-	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['name']);
-	$returnable->location1     = forceString(empty($_POST['$location1']) ? '' : $_POST['name']);
-	$returnable->location2     = forceString(empty($_POST['$location2']) ? '' : $_POST['name']);
-	$returnable->location3     = forceString(empty($_POST['$location3']) ? '' : $_POST['name']);
-	$returnable->closingTime   = forceInt(empty($_POST['closingTime']) ? '' : $_POST['name']);
-	$returnable->minAttendees  = forceInt(empty($_POST['$minAttendees']) ? '' : $_POST['name']);
-	$returnable->maxAttendees  = forceInt(empty($_POST['$maxAttendees']) ? '' : $_POST['name']);
+	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['skills']);
+	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['description']);
+	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['reward']);
+	$returnable->location1     = forceString(empty($_POST['$location1']) ? '' : $_POST['location1']);
+	$returnable->location2     = forceString(empty($_POST['$location2']) ? '' : $_POST['location2']);
+	$returnable->location3     = forceString(empty($_POST['$location3']) ? '' : $_POST['location3']);
+	$returnable->closingTime   = forceInt(empty($_POST['closingTime']) ? '' : $_POST['closingTime']);
+	$returnable->minAttendees  = forceInt(empty($_POST['$minAttendees']) ? '' : $_POST['minAttendees']);
+	$returnable->maxAttendees  = forceInt(empty($_POST['$maxAttendees']) ? '' : $_POST['maxAttendees']);
 	$returnable->attendees     = array();
 	
 	setChallenge($returnable);
@@ -79,7 +84,12 @@ function editChallenge() {
 		$GLOBALS['response']['errors'][] = 'No valid properties of a challenge were given';
 	
 	//Get the challenge
-	$returnable = getChallenge($id);
+	$returnable = getChallenge($putVars['id']);
+	
+	if (empty($returnable)) {
+		$GLOBALS['response']['errors'][] = "$putVars[id] is not a valid challenge ID";
+		return null;
+	}
 	
 	//Edit the challenge
 	if (!empty($putVars['name']))

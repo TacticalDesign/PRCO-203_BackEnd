@@ -163,10 +163,4 @@ function deleteChallenger() {
 
 
 
-
-
-
-
-
-
 ?>

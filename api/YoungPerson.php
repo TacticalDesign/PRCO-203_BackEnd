@@ -103,7 +103,11 @@ function chargeYoungPerson($debt) {
 	//Find and update the young person
 	$id = getCurrentUserID();
 	$returnable = getYoungPerson($id);
-	$returnable->balance -= $debt;
+	
+	if ($returnable->balance >= $debt)
+		$returnable->balance -= $debt;
+	else
+		$GLOBALS['response']['errors'][] = "$returnable->firstName only has $returnable->balance. This is less than $debt";
 	
 	//Save and return the young person
 	setYoungPerson($returnable);
