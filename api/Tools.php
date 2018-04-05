@@ -10,7 +10,7 @@ function getReturnReady($returnable, $goDeeper) {
 	}
 	else {
 		$ready = getObjReturnReady($data, $goDeeper);
-		$returnable['result'] = $ready === null ? array() : array($ready);
+		$returnable['result'] = empty($ready) ? array() : array($ready);
 	}
 	
 	return $returnable;
@@ -23,18 +23,41 @@ function getObjReturnReady($data, $goDeeper) {
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
 			$result = getChallenger($data->challenger);
-			if (!empty($result))
+			if (count($results) > 0) {
+				foreach ($results as $i => $result) {
+					$result = getObjReturnReady($result, false);
+				}
 				$data->challenger = getObjReturnReady($result, false);
+			}
 		}
 		if (!empty($data->currentChallenges)) {
-			$results = findChallenges(implode(',', $data->currentChallenges));
-			if (count($results) > 0)
+			$results = getChallenges(implode(',', $data->currentChallenges));
+			if (count($results) > 0) {
+				foreach ($results as $i => $result) {
+					$result = getObjReturnReady($result, false);
+				}
 				$data->currentChallenges = $results;
+			}
 		}
 		if (!empty($data->attendees)) {
-			$results = getYoungPerson(implode(',', $data->attendees));
-			if (count($results) > 0)
+			$results = getYoungPeople(implode(',', $data->attendees));
+			if (count($results) > 0) {
+				foreach ($results as $i => $result) {
+					$result = getObjReturnReady($result, false);
+				}
 				$data->attendees = $results;
+			}
+		}
+	}
+	else {
+		if (!empty($data->challenger)) {
+			$data->challenger = array_values($data->challenger);
+		}
+		if (!empty($data->currentChallenges)) {
+			$data->currentChallenges = array_values($data->currentChallenges);
+		}
+		if (!empty($data->attendees)) {
+			$data->attendees = array_values($data->attendees);
 		}
 	}
 	
@@ -183,9 +206,9 @@ function setYoungPerson($updated) {
 }
 
 function getYoungPerson($id) {
-	$allYoungPerson = json_decode(file_get_contents(youngPeopleFile), true);
-	if (array_key_exists($id, $allYoungPerson))
-		return (object) $allYoungPerson[$id];
+	$allYoungPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	if (array_key_exists($id, $allYoungPeople))
+		return (object) $allYoungPeople[$id];
 	else
 		return null;
 }
@@ -213,10 +236,19 @@ function getChallenge($id) {
 	if (array_key_exists($id, $allChallenges))
 		return (object) $allChallenges[$id];
 	else
-		return null;	
+		return null;
 }
 
-
+function getChallenges($stringIDs) {
+	$allChallenges = json_decode(file_get_contents(currentChallengesFile), true);
+	$results = array();
+	$ids = explode(',', $stringIDs);
+	foreach	($ids as $i => $challenge) {
+		if (array_key_exists($challenge, $allChallenges))
+			$results[] = (object) $allChallenges[$challenge];
+	}
+	return sizeof($results) === 0 ? null : $results;
+}
 
 
 
