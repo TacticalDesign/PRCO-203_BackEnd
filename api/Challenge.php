@@ -14,12 +14,20 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	include_once('CheckLoggedIn.php');
 	
 	//To get an existing challenge
-	if ($_SERVER['REQUEST_METHOD'] === 'GET') {		
-		$response['result'] = getChallenge(forceString($_GET['id']));
+	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		if (empty($_GET['id'])) {
+			$response['result'] = null;
+		}
+		else {
+			$response['result'] = getChallenge(forceString($_GET['id']));
+			if (empty($response['result']))
+				$response['errors'][] = "$id is not a valid challenge ID";
+		}
 	}
+	
 
 	//To create a new challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {	
+	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		//Check the user is a challenger
 		if (!isUserLevel('challenger')) {
 			$response['errors'][] = 'You have to be a challenger to use this command';
@@ -29,7 +37,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 
 	//To edit an existing challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {	
+	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 		//Check the user is a challenger
 		if (!isUserLevel('challenger')) {
 			$response['errors'][] = 'You have to be a challenger to use this command';
@@ -39,7 +47,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 	
 	//Return a value
-	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	$response['count'] = empty($response['result']) ? 0 : 
+		(is_array($response['result']) ? sizeof($response['result']) : 1);
 	echo json_encode(getReturnReady($response, true));
 }
 

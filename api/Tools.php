@@ -190,6 +190,18 @@ function getYoungPerson($id) {
 		return null;
 }
 
+function getYoungPeople($stringIDs) {
+	$allYoungPeople = json_decode(file_get_contents(youngPeopleFile), true);
+	$results = array();
+	$ids = explode(',', $stringIDs);
+	foreach	($ids as $i => $youngPerson) {
+		if (array_key_exists($youngPerson, $allYoungPeople))
+			$results[] = (object) $allYoungPeople[$youngPerson];
+	}
+	return sizeof($results) === 0 ? null : $results;
+	
+}
+
 function setChallenge($updated) {
 	$challenges = json_decode(file_get_contents(currentChallengesFile), true);
 	$challenges[$updated->id] = $updated;

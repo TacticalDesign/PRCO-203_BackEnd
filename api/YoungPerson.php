@@ -9,7 +9,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	$response['result'] = null;
 	$response['count'] = 0;
 	$response['errors'] = array();
-
+	
 	//Check the user has valid login details
 	include_once('CheckLoggedIn.php');
 	
@@ -23,7 +23,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 		$id = getCurrentUserID();
 		$response['result'] = getYoungPerson($id);
 	}
-
+	
 	//To edit an existing young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 		$response['result'] = editYoungPerson();
@@ -33,7 +33,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 		$response['result'] = attendYoungPerson();
 	}
-
+	
 	//To delete a young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 		$response['result'] = deleteYoungPerson();
@@ -119,22 +119,32 @@ function attendYoungPerson() {
 	
 	//Detect possible errors
 	$validKeys = array('challenge', 'attending');
-	foreach (array_diff(array_keys($postVars), $validKeys) as $i => $wrongProp) {
+	foreach (array_diff(array_keys($patchVars), $validKeys) as $i => $wrongProp) {
 		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
 	}
 	
-	if (sizeof(array_diff(array_keys($postVars), $validKeys)) === 0)
+	if (sizeof(array_diff(array_keys($patchVars), $validKeys)) !== 0)
 		$GLOBALS['response']['errors'][] = 'Not all required values were given';
 	
-	//Get and edit the young person
+	//Get the young person
 	$id = getCurrentuserID();
 	$returnable = getYoungPerson($id);
 	
-	if (forceBool($patchVars['attending']))
-		$returnable->currentChallenges[$patchVars['$challenge']] = $patchVars['challenge'];
-	else
-		unset($returnable->currentChallenges[$patchVars['challenge']]);
+	//Get the challenge
+	$challenge = getChallenge($patchVars['challenge']);
 	
+	//Set the attending value
+	if (forceBool($patchVars['attending'])) {
+		$returnable->currentChallenges[$patchVars['challenge']] = $patchVars['challenge'];
+		$challenge->attendees[$id] = $id;
+	}
+	else {
+		unset($returnable->currentChallenges[$patchVars['challenge']]);
+		unset($challenge->attendees[$id]);
+	}
+	
+	//Save the challenge
+	setChallenge($challenge);
 	//Save and return the young person
 	setYoungPerson($returnable);
 	return $returnable;
