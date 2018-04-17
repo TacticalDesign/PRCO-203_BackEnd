@@ -250,6 +250,51 @@ function getChallenges($stringIDs) {
 	return sizeof($results) === 0 ? null : $results;
 }
 
+function getReward($id) {
+	$allRewards = json_decode(file_get_contents(rewardsFile), true);
+	if (array_key_exists($id, $allRewards))
+		return (object) $allRewards[$id];
+	else
+		return null;
+}
+
+function getRewards($stringIDs) {
+	$allRewards = json_decode(file_get_contents(rewardsFile), true);
+	$results = array();
+	$ids = explode(',', $stringIDs);
+	foreach	($ids as $i => $reward) {
+		if (array_key_exists($reward, $allRewards))
+			$results[] = (object) $allRewards[$reward];
+	}
+	return sizeof($results) === 0 ? null : $results;
+}
+
+function setReward($updated) {
+	$rewards = json_decode(file_get_contents(rewardsFile), true);
+	$rewards[$updated->id] = $updated;
+	file_put_contents(rewardsFile, json_encode($rewards, JSON_PRETTY_PRINT));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -25,7 +25,6 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 		}
 	}
 	
-
 	//To create a new challenge
 	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		//Check the user is a challenger
@@ -56,6 +55,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 	
 function createChallenge() {
+	//Create a new Challenge
 	$returnable = new stdClass();
 	$returnable->id            = getNewID();
 	$returnable->frozen        = false;
@@ -66,14 +66,15 @@ function createChallenge() {
 	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['skills']);
 	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['description']);
 	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['reward']);
-	$returnable->location1     = forceString(empty($_POST['$location1']) ? '' : $_POST['location1']);
-	$returnable->location2     = forceString(empty($_POST['$location2']) ? '' : $_POST['location2']);
-	$returnable->location3     = forceString(empty($_POST['$location3']) ? '' : $_POST['location3']);
+	$returnable->location1     = forceString(empty($_POST['location1']) ? '' : $_POST['location1']);
+	$returnable->location2     = forceString(empty($_POST['location2']) ? '' : $_POST['location2']);
+	$returnable->location3     = forceString(empty($_POST['location3']) ? '' : $_POST['location3']);
 	$returnable->closingTime   = forceInt(empty($_POST['closingTime']) ? '' : $_POST['closingTime']);
-	$returnable->minAttendees  = forceInt(empty($_POST['$minAttendees']) ? '' : $_POST['minAttendees']);
-	$returnable->maxAttendees  = forceInt(empty($_POST['$maxAttendees']) ? '' : $_POST['maxAttendees']);
+	$returnable->minAttendees  = forceInt(empty($_POST['minAttendees']) ? '' : $_POST['minAttendees']);
+	$returnable->maxAttendees  = forceInt(empty($_POST['maxAttendees']) ? '' : $_POST['maxAttendees']);
 	$returnable->attendees     = array();
 	
+	//Save and return the challenge
 	setChallenge($returnable);
 	return $returnable;
 }

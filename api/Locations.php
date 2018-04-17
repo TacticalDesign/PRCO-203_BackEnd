@@ -10,6 +10,8 @@ define("profileFolder", dataFolder . "/UserPhotos");
 
 define("coverPhotoFolder", dataFolder . "/CoverPhotos");
 
+define("rewardPhotoFolder", dataFolder . "/RewardPhotos");
+
 define("emailsFolder", dataFolder . "/Emails");
 
 define("adminFile", dataFolder . "/Admins.json");
@@ -19,6 +21,8 @@ define("challengerFile", dataFolder . "/Challengers.json");
 define("youngPeopleFile", dataFolder . "/YoungPeople.json");
 
 define("currentChallengesFile", dataFolder . "/CurrentChallenges.json");
+
+define("rewardsFile", dataFolder . "/Rewards.json");
 
 define("newAccountEmail", emailsFolder . "/NewAccountEmail.html");
 
@@ -39,6 +43,10 @@ if (!file_exists(coverPhotoFolder)) {
     mkdir(coverPhotoFolder, 0600, true);
 }
 
+if (!file_exists(rewardPhotoFolder)) {
+    mkdir(rewardPhotoFolder, 0600, true);
+}
+
 if (!file_exists(adminFile)){
 	file_put_contents(adminFile, json_encode(Array()));
 	chmod(adminFile, 0600);
@@ -57,6 +65,11 @@ if (!file_exists(youngPeopleFile)){
 if (!file_exists(currentChallengesFile)){
 	file_put_contents(currentChallengesFile, json_encode(Array()));
 	chmod(currentChallengesFile, 0600);
+}
+
+if (!file_exists(rewardsFile)){
+	file_put_contents(rewardsFile, json_encode(Array()));
+	chmod(rewardsFile, 0600);
 }
 
 ?>
