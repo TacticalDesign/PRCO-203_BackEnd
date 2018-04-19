@@ -74,6 +74,10 @@ function createChallenge() {
 	$returnable->maxAttendees  = forceInt(empty($_POST['maxAttendees']) ? '' : $_POST['maxAttendees']);
 	$returnable->attendees     = array();
 	
+	$challenger = getChallenger($returnable->challenger);
+	$challenger->currentChallenges[$returnable->id] = $returnable->id;
+	setChallenger($challenger);
+	
 	//Save and return the challenge
 	setChallenge($returnable);
 	return $returnable;

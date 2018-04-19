@@ -134,7 +134,7 @@ function createYoungPerson() {
 	}
 	else if(!mail($email, $subject, $message, $headers)) {
 		$GLOBALS['response']['errors'][] = "Unable to send email to $email";
-		die();
+		return null;
 	}
 	
 	//Create the new young person

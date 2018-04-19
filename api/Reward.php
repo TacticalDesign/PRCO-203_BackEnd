@@ -46,22 +46,31 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	}
 	
 	//To freeze/defrost a reward
-	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
-		parse_str(file_get_contents('php://input'), $patchVars);
+	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {		
+		//Check if the user is an admin
+		if (isUserLevel('admin')) {
+			parse_str(file_get_contents('php://input'), $patchVars);
+			//Detect possible errors
+			if ($patchVars['action'] !== 'freeze' && $patchVars['action'] !== 'defrost')
+				$response['errors'][] = "$patchVars[action] is not a correct action";
+			
+			$reward = getReward(forceString($patchVars['id']));
+			
+			if (empty($reward))
+				$response['errors'][] = "$patchVars[id] is not a valid reward";
+			
+			if ($patchVars['action'] === 'freeze')
+				$response['result'] = freezeReward(forceString($patchVars['id']));
+			else if ($patchVars['action'] === 'defrost')
+				$response['result'] = defrostReward(forceString($patchVars['id']));
+		}
+		//Check if the user is a young person
+		else if (isUserLevel('youngPerson')) {
+			$response['result'] = claimReward();
+		}
+		else
+			$response['errors'][] = 'You need to be an Admin or a young person to PATCH a Reward';
 		
-		//Detect possible errors
-		if ($patchVars['action'] !== 'freeze' && $patchVars['action'] !== 'defrost')
-			$response['errors'][] = "$patchVars[action] is not a correct action";
-		
-		$reward = getReward(forceString($patchVars['id']));
-		
-		if (empty($reward))
-			$response['errors'][] = "$patchVars[id] is not a valid reward";
-		
-		if ($patchVars['action'] === 'freeze')
-			$response['result'] = freezeReward(forceString($patchVars['id']));
-		else if ($patchVars['action'] === 'defrost')
-			$response['result'] = defrostReward(forceString($patchVars['id']));
 	}
 
 	//To delete a reward with a given ID
@@ -111,14 +120,14 @@ function editReward() {
 	if (empty($returnable)) {
 		$GLOBALS['response']['errors'][] = "$putVars[id] is not a valid reward ID";
 		return null;
-	}	
+	}
 	
 	//Edit the reward
-	if ($putVars['name'] !== null)
+	if (!empty($putVars['name']))
 		$returnable->name = forceString($putVars['name']);
-	if ($description !== null)
+	if (!empty($putVars['description']))
 		$returnable->description = forceString($putVars['description']);
-	if ($cost !== null)
+	if (!empty($putVars['cost']))
 		$returnable->cost = forceInt($putVars['cost']);
 	
 	//Save and return the reward
@@ -157,7 +166,73 @@ function deleteReward($id) {
 	return $returnable;
 }
 
-
+function claimReward() {
+	parse_str(file_get_contents('php://input'), $patchVars);
+	
+	//Detect possible errors
+	$validKeys = array('rewardID', 'youngPersonID');
+	foreach (array_diff(array_keys($patchVars), $validKeys) as $i => $wrongProp) {
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property";
+	}
+	
+	if (sizeof(array_intersect(array_keys($patchVars), $validKeys)) === 0)
+		$GLOBALS['response']['errors'][] = 'No valid properties were given';
+	
+	//Get the reward and the young person
+	$theReward      = getReward($patchVars['rewardID']);
+	$theYoungPerson = getYoungPerson($patchVars['youngPersonID']);
+	
+	if (empty($theReward)) {
+		$GLOBALS['response']['errors'][] = "$patchVars[rewardID] is not a valid reward ID";
+		return null;
+	}
+	if (empty($theYoungPerson)) {
+		$GLOBALS['response']['errors'][] = "$patchVars[youngPersonID] is not a valid Young Person ID";
+		return null;
+	}
+		
+	//Create the response object
+	$returnable = new stdClass();
+	$returnable->successful = false;
+	$returnable->reward = $theReward;
+	
+	//Make the 'transaction'
+	if ($theYoungPerson->balance >= $theReward->cost) {		
+		//Create and send an email with with any needed details
+		$subject = "Your gift card is here!";
+		$props = array(
+			'{$email}' => $theYoungPerson->email,
+			'{$name}' => $theYoungPerson->firstName,
+			'{cardName}' => $theReward->name,
+			'{cardImage}' => $theReward->image,
+			'{cardDescription}' => $theReward->description,
+			'{cardCost}' => "" . $theReward->cost
+		);
+		$message = strtr(file_get_contents(newAccountEmail), $props);
+		$headers  = "From: noreply@realideas.org;" . "\r\n";
+		$headers .= "MIME-Version: 1.0;" . "\r\n";
+		$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
+		
+		if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {
+			
+		}
+		else if(!mail($email, $subject, $message, $headers)) {
+			$GLOBALS['response']['errors'][] = "Unable to send email to $email";
+			return null;
+		}
+		
+		//Debit the young person's account
+		$theYoungPerson->balance -= $theReward->cost;
+		$returnable->successful = true;
+	}
+	else {
+		$GLOBALS['response']['errors'][] = "$theYoungPerson->firstName only has $theYoungPerson->balance. This is less than $theReward->cost";
+	}
+	//Save and return the young person
+	setYoungPerson($theYoungPerson);
+	$returnable->youngPerson = $theYoungPerson;
+	return $returnable;
+}
 
 
 

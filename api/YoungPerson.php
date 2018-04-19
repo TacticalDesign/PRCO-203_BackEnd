@@ -96,24 +96,6 @@ function editYoungPerson() {
 	return $returnable;	
 }
 
-function chargeYoungPerson($debt) {
-	//Check the input is a number format
-	$debt = forceInt($debt);
-	
-	//Find and update the young person
-	$id = getCurrentUserID();
-	$returnable = getYoungPerson($id);
-	
-	if ($returnable->balance >= $debt)
-		$returnable->balance -= $debt;
-	else
-		$GLOBALS['response']['errors'][] = "$returnable->firstName only has $returnable->balance. This is less than $debt";
-	
-	//Save and return the young person
-	setYoungPerson($returnable);
-	return $returnable;
-}
-
 function attendYoungPerson() {
 	parse_str(file_get_contents('php://input'), $patchVars);
 	
@@ -132,6 +114,11 @@ function attendYoungPerson() {
 	
 	//Get the challenge
 	$challenge = getChallenge($patchVars['challenge']);
+	
+	if (empty($challenge)) {
+		$GLOBALS['response']['errors'][] = "$patchvars[challenge] is not a correct challenge ID";
+		return null;
+	}
 	
 	//Set the attending value
 	if (forceBool($patchVars['attending'])) {

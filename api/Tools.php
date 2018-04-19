@@ -23,10 +23,7 @@ function getObjReturnReady($data, $goDeeper) {
 	if ($goDeeper) {
 		if (!empty($data->challenger)) {
 			$result = getChallenger($data->challenger);
-			if (count($results) > 0) {
-				foreach ($results as $i => $result) {
-					$result = getObjReturnReady($result, false);
-				}
+			if (!empty($results)) {
 				$data->challenger = getObjReturnReady($result, false);
 			}
 		}
@@ -50,9 +47,9 @@ function getObjReturnReady($data, $goDeeper) {
 		}
 	}
 	else {
-		if (!empty($data->challenger)) {
-			$data->challenger = array_values($data->challenger);
-		}
+		//if (!empty($data->challenger)) {
+		//	$data->challenger = array_values($data->challenger);
+		//}
 		if (!empty($data->currentChallenges)) {
 			$data->currentChallenges = array_values($data->currentChallenges);
 		}
