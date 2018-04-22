@@ -54,9 +54,9 @@ function editYoungPerson() {
 	parse_str(file_get_contents('php://input'), $putVars);
 	
 	//Check the given email is valid
-	if (!empty($putVars['firstName'])) {
-		$putVars['firstName'] = filter_var($putVars['firstName'], FILTER_SANITIZE_EMAIL);
-		if (!filter_var($putVars['firstName'], FILTER_VALIDATE_EMAIL)) {
+	if (!empty($putVars['email'])) {
+		$putVars['email'] = filter_var($putVars['email'], FILTER_SANITIZE_EMAIL);
+		if (!filter_var($putVars['email'], FILTER_VALIDATE_EMAIL)) {
 			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 			return null;
 		}
@@ -148,7 +148,6 @@ function deleteYoungPerson() {
 	file_put_contents(youngPeopleFile, json_encode($youngPeople));
 	return $returnable;
 }
-
 
 
 
