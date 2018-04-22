@@ -20,8 +20,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing admin
 	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$id = getCurrentUserID();
-		$response['result'] = getAdmin($id);
+		$response['result'] = getAdmin(forceString($_GET['id']));
 	}
 
 	//To edit an existing admin

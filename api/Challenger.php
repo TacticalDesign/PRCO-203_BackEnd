@@ -15,8 +15,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing challenger
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$id = getCurrentUserID();
-		$response['result'] = getChallenger($id);
+		$response['result'] = getChallenger(forceString($_GET['id']));
 	}
 
 	//To edit an existing challenger

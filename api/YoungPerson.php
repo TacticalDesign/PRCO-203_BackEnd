@@ -20,8 +20,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$id = getCurrentUserID();
-		$response['result'] = getYoungPerson($id);
+		$response['result'] = getYoungPerson(forceString($_GET['id']));
 	}
 	
 	//To edit an existing young person
