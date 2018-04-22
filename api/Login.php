@@ -59,7 +59,7 @@ function checkUserBase($file, $accountType) {
 					'youngPerson' => youngPeopleFile
 				);
 				
-				//Find the user 
+				//Find the user
 				$allUsers = json_decode(file_get_contents($dataSets[$accountType]));
 				$foundUser = $allUsers->{$user->id};
 				$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);

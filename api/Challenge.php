@@ -13,28 +13,43 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//Check the user has valid login details
 	include_once('CheckLoggedIn.php');
 	
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$response['errors'][] = 'You have to be a challenger to use this command';
+	//To get an existing challenge
+	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+		$response['result'] = returnChallenges();
 	}
 	
-	//To get an existing challenge
-	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {		
-		$response['result'] = getChallenge(forceString($_GET['id']));
-	}
-
 	//To create a new challenge
 	else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-		$response['result'] = createChallenge();
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = createChallenge();
 	}
 
 	//To edit an existing challenge
 	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-		$response['result'] = editChallenge();
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = editChallenge();
+	}
+	
+	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = deleteChallenge();
 	}
 	
 	//Return a value
-	$response['count'] = is_array($response['result']) ? sizeof($response['result']) : 1;
+	$response['count'] = empty($response['result']) ? 0 : 
+		(is_array($response['result']) ? sizeof($response['result']) : 1);
 	echo json_encode(getReturnReady($response, true));
 }
 
@@ -42,24 +57,30 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //=========
 	
 function createChallenge() {
+	//Create a new Challenge
 	$returnable = new stdClass();
 	$returnable->id            = getNewID();
 	$returnable->frozen        = false;
 	$returnable->challenger    = getCurrentuserID();
 	$returnable->adminApproved = false;
 	$returnable->name          = forceString(empty($_POST['name']) ? '' : $_POST['name']);
-	$returnable->image         = profileFolder . '/' . $returnable->id . ".png";
-	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['name']);
-	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['name']);
-	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['name']);
-	$returnable->location1     = forceString(empty($_POST['$location1']) ? '' : $_POST['name']);
-	$returnable->location2     = forceString(empty($_POST['$location2']) ? '' : $_POST['name']);
-	$returnable->location3     = forceString(empty($_POST['$location3']) ? '' : $_POST['name']);
-	$returnable->closingTime   = forceInt(empty($_POST['closingTime']) ? '' : $_POST['name']);
-	$returnable->minAttendees  = forceInt(empty($_POST['$minAttendees']) ? '' : $_POST['name']);
-	$returnable->maxAttendees  = forceInt(empty($_POST['$maxAttendees']) ? '' : $_POST['name']);
+	$returnable->image         = profileFolder . '/' . $returnable->id . '.png';
+	$returnable->skills        = forceStringArray(empty($_POST['skills']) ? '' : $_POST['skills']);
+	$returnable->description   = forceString(empty($_POST['description']) ? '' : $_POST['description']);
+	$returnable->reward        = forceInt(empty($_POST['reward']) ? '' : $_POST['reward']);
+	$returnable->location1     = forceString(empty($_POST['location1']) ? '' : $_POST['location1']);
+	$returnable->location2     = forceString(empty($_POST['location2']) ? '' : $_POST['location2']);
+	$returnable->location3     = forceString(empty($_POST['location3']) ? '' : $_POST['location3']);
+	$returnable->closingTime   = forceInt(empty($_POST['closingTime']) ? '' : $_POST['closingTime']);
+	$returnable->minAttendees  = forceInt(empty($_POST['minAttendees']) ? '' : $_POST['minAttendees']);
+	$returnable->maxAttendees  = forceInt(empty($_POST['maxAttendees']) ? '' : $_POST['maxAttendees']);
 	$returnable->attendees     = array();
 	
+	$challenger = getChallenger($returnable->challenger);
+	$challenger->currentChallenges[$returnable->id] = $returnable->id;
+	setChallenger($challenger);
+	
+	//Save and return the challenge
 	setChallenge($returnable);
 	return $returnable;
 }
@@ -79,7 +100,12 @@ function editChallenge() {
 		$GLOBALS['response']['errors'][] = 'No valid properties of a challenge were given';
 	
 	//Get the challenge
-	$returnable = getChallenge($id);
+	$returnable = getChallenge($putVars['id']);
+	
+	if (empty($returnable)) {
+		$GLOBALS['response']['errors'][] = "$putVars[id] is not a valid challenge ID";
+		return null;
+	}
 	
 	//Edit the challenge
 	if (!empty($putVars['name']))
@@ -107,9 +133,91 @@ function editChallenge() {
 	return $returnable;
 }
 
+function returnChallenges() {
+	$data = null;
+	if (!empty($_GET['id'])) {
+		$data = getChallenge(forceString($_GET['id']));
+		if (empty($data))
+			$response['errors'][] = "$_GET[id] is not a valid challenge ID";
+	}
+	else if (!empty($_GET['ids'])) {
+		$data = getChallenges(forceString($_GET['ids']));
+		if (empty($data))
+			$response['errors'][] = "$_GET[ids] is not a valid CSV of challenge IDs";
+	}
+	else if (!empty($_GET['search'])) {
+		$searchPhrase = forceString($_GET['search']);
+		$_challenges = json_decode(file_get_contents(currentChallengesFile), true);
+		
+		$searchTerms = [];
+		for ($i = strlen($searchPhrase); $i > 1; $i--) {
+			for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
+				array_push($searchTerms, substr($searchPhrase, $ii, $i));
+			}
+		}
+		$possibleParams = array('frozen', 'challenger', 'adminApproved', 'reward');
+		$params = array();
+		foreach ($possibleParams as $i => $possibleParam) {
+			if (!empty($_GET[$possibleParam]))
+				$params[] = array($possibleParam, $_GET[$possibleParam]);
+		}
+		
+		$data = [];
+		$matchedIDs = [];
+		foreach ($searchTerms as $i => $term) {
+			if (!empty($term)) {
+				foreach ($_challenges as $ii => $challenge) {
+					$challenge = (object) $challenge;
+					$skip = false;
+					foreach	($params as $param) {
+						if (is_bool($challenge->{$param[0]})) {
+							if (json_decode($challenge->{$param[0]}) != json_decode($param[1])) {
+								$skip = true;
+								break;
+							}
+						} else {
+							if ($challenge->{$param[0]} != $param[1]) {
+								$skip = true;
+								break;
+							}
+						}
+					}
+					
+					if ($skip)
+						continue;
+					
+					if ((strpos(strtolower($challenge->name), $term) !== false
+								  || strpos(strtolower($challenge->name), $term) !== false
+								  || strpos(strtolower(implode("|", $challenge->skills)), $term) !== false
+								  || strpos(strtolower($challenge->description), $term) !== false
+								  || strpos(strtolower($challenge->location1), $term) !== false
+								  || strpos(strtolower($challenge->location2), $term) !== false
+								  || strpos(strtolower($challenge->location3), $term) !== false)
+								  && !in_array($challenge->id, $matchedIDs)) {
+						array_push($data, $challenge);
+						array_push($matchedIDs, $challenge->id);
+					}
+				}
+			}
+		}
+	}
+	
+	return $data;
+}
 
-
-
+function deleteChallenge() {
+	parse_str(file_get_contents('php://input'), $deleteVars);
+	
+	$allChallenges = json_decode(file_get_contents(currentChallengesFile), true);
+	$returnable = $allChallenges[forceString($deleteVars['id'])];
+	
+	if (empty($returnable))
+		$GLOBALS['response']['errors'][] = "$deleteVars[id] is not a valid ID of a challenge";
+	
+	unset($allChallenges[forceString($deleteVars['id'])]);
+	file_put_contents(currentChallengesFile, json_encode($allChallenges, JSON_PRETTY_PRINT));
+	return $returnable;
+}
 
 
 

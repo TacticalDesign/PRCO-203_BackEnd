@@ -9,7 +9,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	$response['result'] = null;
 	$response['count'] = 0;
 	$response['errors'] = array();
-
+	
 	//Check the user has valid login details
 	include_once('CheckLoggedIn.php');
 	
@@ -20,10 +20,9 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$id = getCurrentUserID();
-		$response['result'] = getYoungPerson($id);
+		$response['result'] = getYoungPerson(forceString($_GET['id']));
 	}
-
+	
 	//To edit an existing young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
 		$response['result'] = editYoungPerson();
@@ -33,7 +32,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
 		$response['result'] = attendYoungPerson();
 	}
-
+	
 	//To delete a young person
 	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 		$response['result'] = deleteYoungPerson();
@@ -54,9 +53,9 @@ function editYoungPerson() {
 	parse_str(file_get_contents('php://input'), $putVars);
 	
 	//Check the given email is valid
-	if (!empty($putVars['firstName'])) {
-		$putVars['firstName'] = filter_var($putVars['firstName'], FILTER_SANITIZE_EMAIL);
-		if (!filter_var($putVars['firstName'], FILTER_VALIDATE_EMAIL)) {
+	if (!empty($putVars['email'])) {
+		$putVars['email'] = filter_var($putVars['email'], FILTER_SANITIZE_EMAIL);
+		if (!filter_var($putVars['email'], FILTER_VALIDATE_EMAIL)) {
 			$GLOBALS['response']['errors'][] = "$email is not a valid email address";
 			return null;
 		}
@@ -96,41 +95,42 @@ function editYoungPerson() {
 	return $returnable;	
 }
 
-function chargeYoungPerson($debt) {
-	//Check the input is a number format
-	$debt = forceInt($debt);
-	
-	//Find and update the young person
-	$id = getCurrentUserID();
-	$returnable = getYoungPerson($id);
-	$returnable->balance -= $debt;
-	
-	//Save and return the young person
-	setYoungPerson($returnable);
-	return $returnable;
-}
-
 function attendYoungPerson() {
 	parse_str(file_get_contents('php://input'), $patchVars);
 	
 	//Detect possible errors
 	$validKeys = array('challenge', 'attending');
-	foreach (array_diff(array_keys($postVars), $validKeys) as $i => $wrongProp) {
+	foreach (array_diff(array_keys($patchVars), $validKeys) as $i => $wrongProp) {
 		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
 	}
 	
-	if (sizeof(array_diff(array_keys($postVars), $validKeys)) === 0)
+	if (sizeof(array_diff(array_keys($patchVars), $validKeys)) !== 0)
 		$GLOBALS['response']['errors'][] = 'Not all required values were given';
 	
-	//Get and edit the young person
+	//Get the young person
 	$id = getCurrentuserID();
 	$returnable = getYoungPerson($id);
 	
-	if (forceBool($patchVars['attending']))
-		$returnable->currentChallenges[$patchVars['$challenge']] = $patchVars['challenge'];
-	else
-		unset($returnable->currentChallenges[$patchVars['challenge']]);
+	//Get the challenge
+	$challenge = getChallenge($patchVars['challenge']);
 	
+	if (empty($challenge)) {
+		$GLOBALS['response']['errors'][] = "$patchvars[challenge] is not a correct challenge ID";
+		return null;
+	}
+	
+	//Set the attending value
+	if (forceBool($patchVars['attending'])) {
+		$returnable->currentChallenges[$patchVars['challenge']] = $patchVars['challenge'];
+		$challenge->attendees[$id] = $id;
+	}
+	else {
+		unset($returnable->currentChallenges[$patchVars['challenge']]);
+		unset($challenge->attendees[$id]);
+	}
+	
+	//Save the challenge
+	setChallenge($challenge);
 	//Save and return the young person
 	setYoungPerson($returnable);
 	return $returnable;
@@ -147,7 +147,6 @@ function deleteYoungPerson() {
 	file_put_contents(youngPeopleFile, json_encode($youngPeople));
 	return $returnable;
 }
-
 
 
 

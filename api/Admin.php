@@ -20,8 +20,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing admin
 	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		$id = getCurrentUserID();
-		$response['result'] = getAdmin($id);
+		$response['result'] = getAdmin(forceString($_GET['id']));
 	}
 
 	//To edit an existing admin
@@ -129,12 +128,12 @@ function createYoungPerson() {
 	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
 		///////////////////////////////////////////////
 		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		   echo $tempPassword;
+		   file_put_contents('PASSWORD_LEAK.txt', $tempPassword);
 		///////////////////////////////////////////////
 	}
 	else if(!mail($email, $subject, $message, $headers)) {
 		$GLOBALS['response']['errors'][] = "Unable to send email to $email";
-		die();
+		return null;
 	}
 	
 	//Create the new young person
@@ -255,9 +254,9 @@ function createChallenger() {
 	}
 	
 	//Detect possible errors
-	$validKeys = array('email', 'name');
+	$validKeys = array('type', 'email', 'name');
 	foreach (array_diff(array_keys($_POST), $validKeys) as $i => $wrongProp) {
-		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a young person";
+		$GLOBALS['response']['errors'][] = "$wrongProp is not a valid property of a challenger";
 	}
 	
 	if (sizeof(array_intersect(array_keys($_POST), $validKeys)) === 0)
@@ -278,7 +277,7 @@ function createChallenger() {
 	$props = array(
 		'{$email}' => $email,
 		'{$tempPassword}' => $tempPassword,
-		'{$name}' => $firstName
+		'{$name}' => $name
 	);
 	$message = strtr(file_get_contents(newAccountEmail), $props);
 	$headers  = "From: noreply@realideas.org;" . "\r\n";
@@ -288,7 +287,7 @@ function createChallenger() {
 	if(in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1','::1'))) {		
 		///////////////////////////////////////////////
 		// MAJOR DEBUG CODE - PASSWORDS BEING LEAKED
-		   echo $tempPassword;
+		   file_put_contents('PASSWORD_LEAK.txt', $tempPassword);
 		///////////////////////////////////////////////
 	}
 	else if(!mail($email, $subject, $message, $headers)) {
@@ -402,7 +401,6 @@ function searchChallenger($searchPhrase, $where) {
 
 function editAdmin() {
 	parse_str(file_get_contents('php://input'), $putVars);
-	
 	//Check the given email is valid
 	if (!empty($putVars['email'])) {
 		$putVars['email'] = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -452,7 +450,6 @@ function deleteAdmin() {
 	file_put_contents(adminFile, json_encode($admins));
 	return $returnable;
 }
-
 
 
 
