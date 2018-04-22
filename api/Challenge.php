@@ -15,14 +15,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	
 	//To get an existing challenge
 	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-		if (empty($_GET['id'])) {
-			$response['result'] = null;
-		}
-		else {
-			$response['result'] = getChallenge(forceString($_GET['id']));
-			if (empty($response['result']))
-				$response['errors'][] = "$id is not a valid challenge ID";
-		}
+		$response['result'] = returnChallenges();
 	}
 	
 	//To create a new challenge
@@ -131,7 +124,77 @@ function editChallenge() {
 	return $returnable;
 }
 
-
+function returnChallenges() {
+	$data = null;
+	if (!empty($_GET['id'])) {
+		$data = getChallenge(forceString($_GET['id']));
+		if (empty($data))
+			$response['errors'][] = "$_GET[id] is not a valid challenge ID";
+	}
+	else if (!empty($_GET['ids'])) {
+		$data = getChallenges(forceString($_GET['ids']));
+		if (empty($data))
+			$response['errors'][] = "$_GET[ids] is not a valid CSV of challenge IDs";
+	}
+	else if (!empty($_GET['search'])) {
+		$searchPhrase = forceString($_GET['search']);
+		$_challenges = json_decode(file_get_contents(currentChallengesFile), true);
+		
+		$searchTerms = [];
+		for ($i = strlen($searchPhrase); $i > 1; $i--) {
+			for ($ii = 0; $ii < strlen($searchPhrase) - $i + 1; $ii++) {
+				array_push($searchTerms, substr($searchPhrase, $ii, $i));
+			}
+		}
+		$possibleParams = array('frozen', 'challenger', 'adminApproved', 'reward');
+		$params = array();
+		foreach ($possibleParams as $i => $possibleParam) {
+			if (!empty($_GET[$possibleParam]))
+				$params[] = array($possibleParam, $_GET[$possibleParam]);
+		}
+		
+		$data = [];
+		$matchedIDs = [];
+		foreach ($searchTerms as $i => $term) {
+			if (!empty($term)) {
+				foreach ($_challenges as $ii => $challenge) {
+					$challenge = (object) $challenge;
+					$skip = false;
+					foreach	($params as $param) {
+						if (is_bool($challenge->{$param[0]})) {
+							if (json_decode($challenge->{$param[0]}) != json_decode($param[1])) {
+								$skip = true;
+								break;
+							}
+						} else {
+							if ($challenge->{$param[0]} != $param[1]) {
+								$skip = true;
+								break;
+							}
+						}
+					}
+					
+					if ($skip)
+						continue;
+					
+					if ((strpos(strtolower($challenge->name), $term) !== false
+								  || strpos(strtolower($challenge->name), $term) !== false
+								  || strpos(strtolower(implode("|", $challenge->skills)), $term) !== false
+								  || strpos(strtolower($challenge->description), $term) !== false
+								  || strpos(strtolower($challenge->location1), $term) !== false
+								  || strpos(strtolower($challenge->location2), $term) !== false
+								  || strpos(strtolower($challenge->location3), $term) !== false)
+								  && !in_array($challenge->id, $matchedIDs)) {
+						array_push($data, $challenge);
+						array_push($matchedIDs, $challenge->id);
+					}
+				}
+			}
+		}
+	}
+	
+	return $data;
+}
 
 
 
