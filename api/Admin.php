@@ -402,7 +402,6 @@ function searchChallenger($searchPhrase, $where) {
 
 function editAdmin() {
 	parse_str(file_get_contents('php://input'), $putVars);
-	
 	//Check the given email is valid
 	if (!empty($putVars['email'])) {
 		$putVars['email'] = filter_var($email, FILTER_SANITIZE_EMAIL);

@@ -13,13 +13,8 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 	//Check the user has valid login details
 	include_once('CheckLoggedIn.php');
 	
-	//Check the user is a challenger
-	if (!isUserLevel('challenger')) {
-		$response['errors'][] = 'You have to be a challenger to use this command';
-	}
-	
 	//To get an existing challenger
-	else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+	if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 		$id = getCurrentUserID();
 		$response['result'] = getChallenger($id);
 	}
@@ -53,6 +48,12 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 //Young People
 
 function feedbackYoungPerson() {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$response['errors'][] = 'You have to be a challenger to use this command';
+		return null;
+	}
+	
 	parse_str(file_get_contents('php://input'), $patchVars);
 	
 	//Detect possible errors
@@ -88,7 +89,12 @@ function feedbackYoungPerson() {
 //Challengers
 
 function editChallenger() {
-	
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$response['errors'][] = 'You have to be a challenger to use this command';
+		return null;
+	}
+		
 	parse_str(file_get_contents('php://input'), $postVars);
 	
 	//Check the given email is valid
@@ -137,6 +143,12 @@ function editChallenger() {
 }
 
 function deleteChallenger() {
+	//Check the user is a challenger
+	if (!isUserLevel('challenger')) {
+		$response['errors'][] = 'You have to be a challenger to use this command';
+		return null;
+	}
+	
 	//Get and delete the challenger
 	$id = getCurrentuserID();
 	$challengers = json_decode(file_get_contents(challengerFile), true);
