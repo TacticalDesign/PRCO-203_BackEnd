@@ -38,6 +38,15 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 			$response['result'] = editChallenge();
 	}
 	
+	else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+		//Check the user is a challenger
+		if (!isUserLevel('challenger')) {
+			$response['errors'][] = 'You have to be a challenger to use this command';
+		}
+		else
+			$response['result'] = deleteChallenge();
+	}
+	
 	//Return a value
 	$response['count'] = empty($response['result']) ? 0 : 
 		(is_array($response['result']) ? sizeof($response['result']) : 1);
@@ -196,7 +205,19 @@ function returnChallenges() {
 	return $data;
 }
 
-
+function deleteChallenge() {
+	parse_str(file_get_contents('php://input'), $deleteVars);
+	
+	$allChallenges = json_decode(file_get_contents(currentChallengesFile), true);
+	$returnable = $allChallenges[forceString($deleteVars['id'])];
+	
+	if (empty($returnable))
+		$GLOBALS['response']['errors'][] = "$deleteVars[id] is not a valid ID of a challenge";
+	
+	unset($allChallenges[forceString($deleteVars['id'])]);
+	file_put_contents(currentChallengesFile, json_encode($allChallenges, JSON_PRETTY_PRINT));
+	return $returnable;
+}
 
 
 

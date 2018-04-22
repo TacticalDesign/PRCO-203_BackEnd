@@ -280,7 +280,7 @@ function setReward($updated) {
 
 
 
-
+//CHECK CHALLENGES EXIST AND IF THEY DON'T THEN DELETE THEM
 
 
 
