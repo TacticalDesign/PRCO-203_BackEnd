@@ -47,14 +47,19 @@ function getObjReturnReady($data, $goDeeper) {
 		}
 	}
 	else {
-		//if (!empty($data->challenger)) {
-		//	$data->challenger = array_values($data->challenger);
-		//}
+		/*if (!empty($data->challenger) && is_array($data->challenger)) {
+			$data->challenger = array_values($data->challenger);
+		}
 		if (!empty($data->currentChallenges)) {
 			$data->currentChallenges = array_values($data->currentChallenges);
 		}
 		if (!empty($data->attendees)) {
 			$data->attendees = array_values($data->attendees);
+		}*/
+		
+		foreach ($data as $key => $value) {
+			if (is_array($value))
+				$data->$key = array_values($value);
 		}
 	}
 	
