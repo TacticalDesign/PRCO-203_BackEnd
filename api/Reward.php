@@ -45,7 +45,7 @@ if (str_replace('/', '\\', __FILE__) == str_replace('/', '\\', $_SERVER['SCRIPT_
 			$response['result'] = editReward();
 	}
 	
-	//To freeze/defrost a reward
+	//To freeze/defrost a reward or claim it
 	else if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {		
 		//Check if the user is an admin
 		if (isUserLevel('admin')) {
@@ -203,12 +203,13 @@ function claimReward() {
 		$props = array(
 			'{$email}' => $theYoungPerson->email,
 			'{$name}' => $theYoungPerson->firstName,
-			'{cardName}' => $theReward->name,
-			'{cardImage}' => $theReward->image,
-			'{cardDescription}' => $theReward->description,
-			'{cardCost}' => "" . $theReward->cost
+			'{$cardName}' => $theReward->name,
+			'{$cardImage}' => $theReward->image,
+			'{$cardDescription}' => $theReward->description,
+			'{$cardCost}' => '' . $theReward->cost,
+			'{$cardCode}' => generateCode()
 		);
-		$message = strtr(file_get_contents(newAccountEmail), $props);
+		$message = strtr(file_get_contents(redeemedRewardEmail), $props);		
 		$headers  = "From: noreply@realideas.org;" . "\r\n";
 		$headers .= "MIME-Version: 1.0;" . "\r\n";
 		$headers .= "Content-Type: text/html; charset=UTF-8" . "\r\n";
@@ -237,7 +238,12 @@ function claimReward() {
 
 
 
-
+function generateCode() {
+	return  substr(str_shuffle(str_repeat("23456789abcdefghjkmnpqrstuvwxyz", 4)), 0, 4)
+	. '-' . substr(str_shuffle(str_repeat("23456789abcdefghjkmnpqrstuvwxyz", 4)), 0, 4)
+	. '-' . substr(str_shuffle(str_repeat("23456789abcdefghjkmnpqrstuvwxyz", 4)), 0, 4)
+	. '-' . substr(str_shuffle(str_repeat("23456789abcdefghjkmnpqrstuvwxyz", 4)), 0, 4);
+}
 
 
 
