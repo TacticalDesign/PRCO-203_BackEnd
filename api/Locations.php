@@ -26,6 +26,8 @@ define("rewardsFile", dataFolder . "/Rewards.json");
 
 define("newAccountEmail", emailsFolder . "/NewAccountEmail.html");
 
+define("redeemedRewardEmail", emailsFolder . "/RedeemedRewardEmail.html");
+
 if (tokenSecret == false) {
 	echo json_encode(array('errors' => array("There is no server-side token secret!")));
 	die();

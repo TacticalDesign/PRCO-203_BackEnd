@@ -1,0 +1,33 @@
+<!--
+Properties to work with are:
+    $email
+    $name
+    $cardName
+    $cardImage
+    $cardDescription
+    $cardCost
+    $cardCode
+-->
+<html>
+<head>
+    <title>You redeemed a giftcard!</title>
+</head>
+<body>
+    <h3>Congratulations on redeeming a giftcard, {$name}!</h3>
+    <p>
+        Here are all the details you need for it:<br/>
+        Name: <b>{$cardName}</b><br />
+        Description: <b>{$cardDescription}</b><br />
+        Value: <b>{$cardCost}</b><br />
+        <br />
+        Dummy reward code: <b>{$cardCode}</b>
+    </p>
+    <p>
+        All of us here hope you enjoy using the app!
+    </p>
+    <p>
+        Regards,<br/>
+        The Dead Pencils App Team!
+    </p>
+</body>
+</html>
