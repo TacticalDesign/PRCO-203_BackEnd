@@ -1,11 +1,10 @@
 <?php
 
-include_once('Locations.php');
-include_once('GetToken.php');
-include_once('GetAdmins.php');
-include_once('GetChallengers.php');
-include_once('GetYoungPeople.php');
+include_once("GetToken.php");
+include_once("Locations.php");
+include_once("Tools.php");
 
+//Create the response
 $response = array();
 $response['token'] = null;
 $response['errors'] = array();
@@ -18,6 +17,13 @@ if (empty($_POST['password']))
 
 //If no errors have been made so far
 if (sizeof($response['errors']) === 0) {
+	//Check for god account
+	if ($_POST['email'] === godUser && $_POST['password'] === godPassword) {
+		$GLOBALS['response']['token'] = GetToken("000", "god");
+		echo json_encode($GLOBALS['response']);
+		die();
+	}
+	
 	//Check each user-base for a matching account
 	if (!checkUserBase(adminFile, 'admin'))
 		if (!checkUserBase(challengerFile, 'challenger'))
@@ -47,20 +53,22 @@ function checkUserBase($file, $accountType) {
 			
 			//If the account is using a tempPassword and it matches			
 			if (password_verify($_POST['tempPassword'], $user->tempPassword)) {
-				switch ($accountType) {
-					case 'admin':
-						editAdmin($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null);
-						break;
-					case 'challenger':
-						editChallenger($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null,
-						null, null, null, null, null);
-						break;
-					case 'youngPerson':
-						editYoungPerson($user->id, null, null, password_hash($_POST['password'], PASSWORD_BCRYPT), null, null,
-						null, null, null, null, null);
-						break;
-				}
-				$GLOBALS['response']['token'] = GetToken($users[0]->id, $accountType);
+				$dataSets = array(
+					'admin' => adminFile,
+					'challenger' => challengerFile,
+					'youngPerson' => youngPeopleFile
+				);
+				
+				//Find the user
+				$allUsers = json_decode(file_get_contents($dataSets[$accountType]));
+				$foundUser = $allUsers->{$user->id};
+				$foundUser->password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+				unset($foundUser->tempPassword);
+				
+				//Save the user and return the token
+				$allUsers->{$user->id} = $foundUser;				
+				file_put_contents($dataSets[$accountType], json_encode($allUsers, JSON_PRETTY_PRINT));				
+				$GLOBALS['response']['token'] = GetToken($foundUser->id, $accountType);
 				return true;
 			}
 			else{
@@ -69,8 +77,9 @@ function checkUserBase($file, $accountType) {
 			}
 		}
 		
+		//Check if the given password matches
 		if (password_verify($_POST['password'], $user->password))
-			$GLOBALS['response']['token'] = GetToken($users[0]->id, $accountType);
+			$GLOBALS['response']['token'] = GetToken($user->id, $accountType);
 		else
 			$GLOBALS['response']['errors'][] = "Password is incorrect";
 		

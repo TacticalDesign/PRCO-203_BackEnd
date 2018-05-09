@@ -2,9 +2,7 @@
 
 include_once("GetToken.php");
 include_once("Locations.php");
-include_once("GetAdmins.php");
-include_once("GetChallengers.php");
-include_once("GetYoungPeople.php");
+include_once("Tools.php");
 
 //If no JWT is given
 if (empty(apache_request_headers()['Authorization']))
@@ -26,22 +24,27 @@ if (sizeof(explode(' ', $data)) === 2) {
 		if ($correctSig !== $tokenParts[2])
 			killAll("Incorrect JWT given!");
 		
-		//Check account isn't frozen
 		$checkPayload = str_replace(['-', '_', ''], ['+', '/', '='], $tokenParts[1]);
-		$userID = json_decode(base64_decode($checkPayload))->user_id;
 		
-		$matches = findAdmin($userID, null);
-		if (empty($matches))
-			$matches = findChallenger($userID, null);
-		if (empty($matches))
-			$matches = findYoungPerson($userID, null);
+		if (json_decode(base64_decode($checkPayload))->user_typ !== 'god') {
 		
-		if (!empty($matches)) {
-			if ($matches[0]->frozen)
-				killAll("Your account is frozen");
+			$userID = getCurrentUserID();
+			
+			$match = null;
+			$match = getAdmin($userID);
+			if ($match === null)
+				$match = getChallenger($userID);
+			if ($match === null)
+				$match = getYoungPerson($userID);
+			
+			//Check account isn't frozen
+			if (!empty($match)) {
+				if ($match->frozen)
+					killAll("Your account is frozen");
+			}
+			else
+				killAll("Account cannot be found");
 		}
-		else
-			killAll("Account cannot be found");
 	}
 	else
 		killAll("Incorrect JWT given!");
@@ -52,8 +55,12 @@ else
 
 
 function killAll($message) {
-	echo json_encode(array('errors' => array($message)));
+	$GLOBALS['response']['errors'][] = $message;
+	$GLOBALS['response']['count'] = empty($GLOBALS['response']['result']) ? 0 : 
+		(is_array($GLOBALS['response']['result']) ? sizeof($GLOBALS['response']['result']) : 1);
+	echo json_encode(getReturnReady($GLOBALS['response'], true));
 	die();
+	
 }
 
 

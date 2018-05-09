@@ -1,12 +1,16 @@
 <?php
 
 define('tokenSecret', json_decode(file_get_contents("../../TokenSecret.json"))->secret);
+define('godUser', json_decode(file_get_contents("../../TokenSecret.json"))->godUser);
+define('godPassword', json_decode(file_get_contents("../../TokenSecret.json"))->godPassword);
 
 define("dataFolder", "Data");
 
 define("profileFolder", dataFolder . "/UserPhotos");
 
 define("coverPhotoFolder", dataFolder . "/CoverPhotos");
+
+define("rewardPhotoFolder", dataFolder . "/RewardPhotos");
 
 define("emailsFolder", dataFolder . "/Emails");
 
@@ -18,7 +22,11 @@ define("youngPeopleFile", dataFolder . "/YoungPeople.json");
 
 define("currentChallengesFile", dataFolder . "/CurrentChallenges.json");
 
+define("rewardsFile", dataFolder . "/Rewards.json");
+
 define("newAccountEmail", emailsFolder . "/NewAccountEmail.html");
+
+define("redeemedRewardEmail", emailsFolder . "/RedeemedRewardEmail.html");
 
 if (tokenSecret == false) {
 	echo json_encode(array('errors' => array("There is no server-side token secret!")));
@@ -35,6 +43,10 @@ if (!file_exists(profileFolder)) {
 
 if (!file_exists(coverPhotoFolder)) {
     mkdir(coverPhotoFolder, 0600, true);
+}
+
+if (!file_exists(rewardPhotoFolder)) {
+    mkdir(rewardPhotoFolder, 0600, true);
 }
 
 if (!file_exists(adminFile)){
@@ -55,6 +67,11 @@ if (!file_exists(youngPeopleFile)){
 if (!file_exists(currentChallengesFile)){
 	file_put_contents(currentChallengesFile, json_encode(Array()));
 	chmod(currentChallengesFile, 0600);
+}
+
+if (!file_exists(rewardsFile)){
+	file_put_contents(rewardsFile, json_encode(Array()));
+	chmod(rewardsFile, 0600);
 }
 
 ?>
